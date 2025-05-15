@@ -29,11 +29,12 @@ const formSchema = z.object({
   destination: z.string().min(2, {
     message: "Destination must be at least 2 characters.",
   }),
-  mileage: z.coerce.number().positive({
-    message: "Mileage must be a positive number.",
-  }),
+  mileage: z.coerce
+    .number()
+    .min(0, { message: "Mileage must be zero or greater." })
+    .default(0), // Add default value
   date: z.string(),
-  notes: z.string().optional(),
+  notes: z.string().optional().default(""), // Add default value
 });
 
 export default function NewRoutePage() {
@@ -45,7 +46,7 @@ export default function NewRoutePage() {
     defaultValues: {
       startLocation: "",
       destination: "",
-      mileage: undefined,
+      mileage: 0, // Change from undefined to 0
       date: new Date().toISOString().split("T")[0],
       notes: "",
     },

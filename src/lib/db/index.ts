@@ -1,10 +1,15 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
+import dotenv from 'dotenv';
 import * as schema from "./schema";
 
-// Database connection string would come from environment variables
-const connectionString = process.env.DATABASE_URL || "";
+dotenv.config();
 
-// Disable prefetch as it is not supported in some serverless environments
-const client = postgres(connectionString, { prepare: false });
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error("DATABASE_URL is not defined in environment variables");
+}
+
+const client = neon(connectionString);
 export const db = drizzle(client, { schema });
