@@ -69,7 +69,7 @@ export async function addRoute(routeData: Omit<Route, "id">): Promise<Route> {
       mileage: routeData.mileage,
       date: new Date(routeData.date),
       notes: routeData.notes,
-      userId: 'default-user', // You'll want to get this from your auth system
+      userID: 'default-user', // You'll want to get this from your auth system
     })
     .returning() as RouteModel[];
   

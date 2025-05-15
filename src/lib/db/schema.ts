@@ -7,7 +7,7 @@ export const routes = pgTable("routes", {
   mileage: integer("mileage").notNull(),
   date: timestamp("date").defaultNow().notNull(),
   notes: text("notes"),
-  userId: text("user_id").notNull(),
+  userID: text("user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

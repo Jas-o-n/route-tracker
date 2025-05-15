@@ -6,7 +6,7 @@ export interface RouteModel {
   mileage: number;
   date: Date;
   notes: string | null;
-  userId: string;
+  userID: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,7 +19,7 @@ export interface Route {
   mileage: number;
   date: string;
   notes: string | null;
-  userId: string;
+  userID: string;
   createdAt: string;
   updatedAt: string;
 }
