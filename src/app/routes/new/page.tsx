@@ -31,10 +31,9 @@ const formSchema = z.object({
   }),
   mileage: z.coerce
     .number()
-    .min(0, { message: "Mileage must be zero or greater." })
-    .default(0), // Add default value
+    .min(0, { message: "Mileage must be zero or greater." }), // Add default value
   date: z.string(),
-  notes: z.string().optional().default(""), // Add default value
+  notes: z.string().optional(), // Add default value
 });
 
 export default function NewRoutePage() {
@@ -56,7 +55,7 @@ export default function NewRoutePage() {
     setIsSubmitting(true);
     try {
       // Here we'd typically call a database function
-      await addRoute(values);
+      await addRoute(values as any);
       router.push("/routes");
     } catch (error) {
       console.error("Failed to add route:", error);
