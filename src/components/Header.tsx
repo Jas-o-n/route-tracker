@@ -75,6 +75,23 @@ export default function Header() {
                 </Link>
               );
             })}
+            {links.map((link) => {
+              const Icon = link.icon;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`text-sm transition-colors hover:text-primary flex items-center gap-2 ${
+                    pathname === link.href
+                      ? "font-medium text-primary"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {link.label}
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="flex items-center gap-2">
@@ -112,6 +129,23 @@ export default function Header() {
                   </div>
                 </SheetHeader>
                 <nav className="flex flex-col gap-4 mt-4">
+                  {links.map((link) => {
+                    const Icon = link.icon;
+                    return (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        className={`py-2 text-sm transition-colors hover:text-primary flex items-center gap-2 ${
+                          pathname === link.href
+                            ? "font-medium text-primary"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {link.label}
+                      </Link>
+                    );
+                  })}
                   {links.map((link) => {
                     const Icon = link.icon;
                     return (
