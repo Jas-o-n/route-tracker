@@ -2,11 +2,25 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check, ArrowLeft, MapPin } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { usePlaces } from "@/hooks/usePlaces";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -21,6 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { addRoute } from "@/lib/actions/route-actions";
 import Link from "next/link";
+import { PlaceSelect } from "@/components/place-select";
 
 const formSchema = z.object({
   startLocation: z.string().min(2, {
@@ -39,6 +54,9 @@ const formSchema = z.object({
 export default function NewRoutePage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { places, isLoading } = usePlaces();
+  const [openStart, setOpenStart] = useState(false);
+  const [openDest, setOpenDest] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -87,10 +105,14 @@ export default function NewRoutePage() {
                     <FormItem>
                       <FormLabel>Start Location</FormLabel>
                       <FormControl>
-                        <div className="relative">
-                          <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input placeholder="Enter start location" className="pl-9" {...field} />
-                        </div>
+                        <PlaceSelect
+                          value={field.value}
+                          onChange={field.onChange}
+                          places={places}
+                          open={openStart}
+                          onOpenChange={setOpenStart}
+                          placeholder="Select start location"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -104,10 +126,14 @@ export default function NewRoutePage() {
                     <FormItem>
                       <FormLabel>Destination</FormLabel>
                       <FormControl>
-                        <div className="relative">
-                          <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input placeholder="Enter destination" className="pl-9" {...field} />
-                        </div>
+                        <PlaceSelect
+                          value={field.value}
+                          onChange={field.onChange}
+                          places={places}
+                          open={openDest}
+                          onOpenChange={setOpenDest}
+                          placeholder="Select destination"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

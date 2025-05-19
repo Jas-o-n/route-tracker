@@ -23,6 +23,7 @@ import { getRouteById, deleteRoute } from "@/lib/actions/route-actions";
 import { RouteWithStats } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import RouteMap from "@/components/RouteMap";
+import { usePlaces } from "@/hooks/usePlaces";
 
 export default function RouteDetailPage() {
   const params = useParams();
@@ -31,6 +32,7 @@ export default function RouteDetailPage() {
   const [route, setRoute] = useState<RouteWithStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const { places } = usePlaces();
 
   useEffect(() => {
     async function loadRoute() {
@@ -158,17 +160,27 @@ export default function RouteDetailPage() {
 
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground mb-1">Start Location</h3>
-                  <div className="flex items-center">
-                    <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span>{route.startLocation}</span>
+                  <div className="flex items-start">
+                    <MapPin className="h-4 w-4 mr-2 mt-1 text-muted-foreground shrink-0" />
+                    <div>
+                      <span className="font-medium">{route.startLocation}</span>
+                      <p className="text-sm text-muted-foreground">
+                        {places.find(p => p.name === route.startLocation)?.address}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground mb-1">Destination</h3>
-                  <div className="flex items-center">
-                    <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span>{route.destination}</span>
+                  <div className="flex items-start">
+                    <MapPin className="h-4 w-4 mr-2 mt-1 text-muted-foreground shrink-0" />
+                    <div>
+                      <span className="font-medium">{route.destination}</span>
+                      <p className="text-sm text-muted-foreground">
+                        {places.find(p => p.name === route.destination)?.address}
+                      </p>
+                    </div>
                   </div>
                 </div>
 

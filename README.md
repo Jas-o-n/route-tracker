@@ -6,5 +6,6 @@ Todo:
 -[] export routes on certain dates to csv
 -[] for vehicle add starting mileage on profile
 -[x] save places
-    -[] ability to choose from places when adding a route
+    -[x] ability to choose from places when adding a route
+    -[x] display place address in route details
 

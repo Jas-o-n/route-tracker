@@ -21,6 +21,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { getRouteById, updateRoute } from "@/lib/actions/route-actions";
 import Link from "next/link";
+import { PlaceSelect } from "@/components/place-select";
+import { usePlaces } from "@/hooks/usePlaces";
 
 const formSchema = z.object({
   startLocation: z.string().min(2, {
@@ -42,6 +44,9 @@ export default function EditRoutePage() {
   const id = params.id as string;
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { places, isLoading: placesLoading } = usePlaces();
+  const [openStart, setOpenStart] = useState(false);
+  const [openDest, setOpenDest] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -89,7 +94,7 @@ export default function EditRoutePage() {
     }
   }
 
-  if (loading) {
+  if (loading || placesLoading) {
     return (
       <div className="container mx-auto max-w-3xl py-8 px-4 md:px-6 flex justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -120,10 +125,14 @@ export default function EditRoutePage() {
                     <FormItem>
                       <FormLabel>Start Location</FormLabel>
                       <FormControl>
-                        <div className="relative">
-                          <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input placeholder="Enter start location" className="pl-9" {...field} />
-                        </div>
+                        <PlaceSelect
+                          value={field.value}
+                          onChange={field.onChange}
+                          places={places}
+                          open={openStart}
+                          onOpenChange={setOpenStart}
+                          placeholder="Select start location"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -137,10 +146,14 @@ export default function EditRoutePage() {
                     <FormItem>
                       <FormLabel>Destination</FormLabel>
                       <FormControl>
-                        <div className="relative">
-                          <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input placeholder="Enter destination" className="pl-9" {...field} />
-                        </div>
+                        <PlaceSelect
+                          value={field.value}
+                          onChange={field.onChange}
+                          places={places}
+                          open={openDest}
+                          onOpenChange={setOpenDest}
+                          placeholder="Select destination"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
