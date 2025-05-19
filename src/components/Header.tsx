@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, MapPin, Moon, Sun } from "lucide-react";
+import { Menu, Plus, MapPin, Moon, Sun, Home } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,9 +14,10 @@ import {
 } from "@/components/ui/sheet";
 
 const links = [
-  { href: "/", label: "Home" },
-  { href: "/routes", label: "Routes" },
-  { href: "/routes/new", label: "Add Route" },
+  { href: "/", label: "Home", icon: Home },
+  { href: "/routes", label: "Routes", icon: MapPin },
+  { href: "/routes/new", label: "Add Route", icon: Plus },
+  { href: "/places", label: "Places", icon: MapPin },
 ];
 
 export default function Header() {
@@ -25,12 +26,10 @@ export default function Header() {
   const { theme, setTheme } = useTheme();
   const [isMounted, setIsMounted] = useState(false);
 
-  // Handle theme toggle
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Handle scroll events
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -59,19 +58,23 @@ export default function Header() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-6">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`text-sm transition-colors hover:text-primary ${
-                  pathname === link.href
-                    ? "font-medium text-primary"
-                    : "text-muted-foreground"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {links.map((link) => {
+              const Icon = link.icon;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`text-sm transition-colors hover:text-primary flex items-center gap-2 ${
+                    pathname === link.href
+                      ? "font-medium text-primary"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {link.label}
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="flex items-center gap-2">
@@ -109,19 +112,23 @@ export default function Header() {
                   </div>
                 </SheetHeader>
                 <nav className="flex flex-col gap-4 mt-4">
-                  {links.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className={`py-2 text-sm transition-colors hover:text-primary ${
-                        pathname === link.href
-                          ? "font-medium text-primary"
-                          : "text-muted-foreground"
-                      }`}
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
+                  {links.map((link) => {
+                    const Icon = link.icon;
+                    return (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        className={`py-2 text-sm transition-colors hover:text-primary flex items-center gap-2 ${
+                          pathname === link.href
+                            ? "font-medium text-primary"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {link.label}
+                      </Link>
+                    );
+                  })}
                 </nav>
               </SheetContent>
             </Sheet>
