@@ -11,3 +11,12 @@ export const routes = pgTable("routes", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const places = pgTable("places", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  address: text("address").notNull(),
+  userID: text("user_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
