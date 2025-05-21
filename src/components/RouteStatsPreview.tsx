@@ -1,42 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Car, Route as RouteIcon, MapPin, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { getRouteStats } from "@/lib/actions/route-actions";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useRouteStats } from "@/hooks/useRoutes";
+import { RouteStats } from "@/lib/types";
 
-interface RouteStats {
-  totalRoutes: number;
-  totalMiles: number;
-  mostFrequentRoute: {
-    from: string;
-    to: string;
-    count: number;
-  } | null;
-  avgMileagePerRoute: number;
+interface RouteStatsPreviewProps {
+  initialStats?: RouteStats | null;
 }
 
-export default function RouteStatsPreview() {
-  const [stats, setStats] = useState<RouteStats | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function RouteStatsPreview({ initialStats }: RouteStatsPreviewProps) {
+  const { data: stats, isLoading } = useRouteStats();
+  const currentStats = stats || initialStats;
 
-  useEffect(() => {
-    async function loadStats() {
-      try {
-        const routeStats = await getRouteStats();
-        setStats(routeStats);
-      } catch (error) {
-        console.error("Failed to load stats:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadStats();
-  }, []);
-
-  if (loading) {
+  if (isLoading && !initialStats) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[...Array(4)].map((_, i) => (
@@ -52,7 +30,7 @@ export default function RouteStatsPreview() {
     );
   }
 
-  if (!stats) {
+  if (!currentStats) {
     return (
       <Card>
         <CardContent className="p-6 text-center">
@@ -65,31 +43,31 @@ export default function RouteStatsPreview() {
   const statCards = [
     {
       title: "Total Routes",
-      value: stats.totalRoutes,
+      value: currentStats.totalRoutes,
       icon: <RouteIcon className="h-6 w-6" />,
       color: "text-blue-500",
       bgColor: "bg-blue-50 dark:bg-blue-950",
     },
     {
       title: "Total Miles",
-      value: `${stats.totalMiles.toLocaleString()} mi`,
+      value: `${currentStats.totalMiles.toLocaleString()} mi`,
       icon: <Car className="h-6 w-6" />,
       color: "text-teal-500",
       bgColor: "bg-teal-50 dark:bg-teal-950",
     },
     {
       title: "Most Frequent Route",
-      value: stats.mostFrequentRoute
-        ? `${stats.mostFrequentRoute.from} → ${stats.mostFrequentRoute.to}`
+      value: currentStats.mostFrequentRoute
+        ? `${currentStats.mostFrequentRoute.from} → ${currentStats.mostFrequentRoute.to}`
         : "N/A",
-      subtitle: stats.mostFrequentRoute ? `${stats.mostFrequentRoute.count} times` : "",
+      subtitle: currentStats.mostFrequentRoute ? `${currentStats.mostFrequentRoute.count} times` : "",
       icon: <MapPin className="h-6 w-6" />,
       color: "text-orange-500",
       bgColor: "bg-orange-50 dark:bg-orange-950",
     },
     {
       title: "Avg. Miles per Route",
-      value: `${stats.avgMileagePerRoute.toFixed(1)} mi`,
+      value: `${currentStats.avgMileagePerRoute.toFixed(1)} mi`,
       icon: <TrendingUp className="h-6 w-6" />,
       color: "text-purple-500",
       bgColor: "bg-purple-50 dark:bg-purple-950",

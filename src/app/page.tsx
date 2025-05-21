@@ -3,8 +3,11 @@ import { MoveRight } from 'lucide-react';
 import RouteStatsPreview from '@/components/RouteStatsPreview';
 import RecentRoutes from '@/components/RecentRoutes';
 import { Button } from '@/components/ui/button';
+import { getInitialRouteStats } from '@/lib/server/route-service';
 
-export default function Home() {
+export default async function Home() {
+  const initialStats = await getInitialRouteStats();
+
   return (
     <main className="flex min-h-screen flex-col">
       {/* Hero Section */}
@@ -35,7 +38,7 @@ export default function Home() {
       <section className="py-16 px-6">
         <div className="container mx-auto max-w-5xl">
           <h2 className="mb-8 text-3xl font-bold tracking-tight">Your Driving Summary</h2>
-          <RouteStatsPreview />
+          <RouteStatsPreview initialStats={initialStats} />
         </div>
       </section>
 

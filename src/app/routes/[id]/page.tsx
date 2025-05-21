@@ -1,66 +1,36 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, Edit, MapPin, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, Calendar, Edit, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { getRouteById, deleteRoute } from "@/lib/actions/route-actions";
-import { RouteWithStats } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import RouteMap from "@/components/RouteMap";
 import { usePlaces } from "@/hooks/usePlaces";
+import { DeleteButton } from "@/components/DeleteButton";
+import { useRoute, useRoutes } from "@/hooks/useRoutes";
 
 export default function RouteDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const [route, setRoute] = useState<RouteWithStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isDeleting, setIsDeleting] = useState(false);
   const { places } = usePlaces();
+  
+  const { data: route, isLoading, isError } = useRoute(id);
+  const { deleteRoute, isDeleting } = useRoutes();
 
-  useEffect(() => {
-    async function loadRoute() {
-      try {
-        const routeData = await getRouteById(id);
-        setRoute(routeData);
-      } catch (error) {
-        console.error("Failed to load route:", error);
-      } finally {
-        setLoading(false);
+  const handleDeleteRoute = async () => {
+    await deleteRoute(id, {
+      onSuccess: () => {
+        router.push("/routes");
       }
-    }
+    });
+  };
 
-    loadRoute();
-  }, [id]);
-
-  async function handleDeleteRoute() {
-    setIsDeleting(true);
-    try {
-      await deleteRoute(id);
-      router.push("/routes");
-    } catch (error) {
-      console.error("Failed to delete route:", error);
-      setIsDeleting(false);
-    }
-  }
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="container mx-auto max-w-3xl py-8 px-4 md:px-6 flex justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -68,7 +38,7 @@ export default function RouteDetailPage() {
     );
   }
 
-  if (!route) {
+  if (isError || !route) {
     return (
       <div className="container mx-auto max-w-3xl py-8 px-4 md:px-6">
         <div className="text-center">
@@ -100,32 +70,12 @@ export default function RouteDetailPage() {
               Edit
             </Link>
           </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="sm">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete this route and remove it from our servers.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDeleteRoute}
-                  disabled={isDeleting}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  {isDeleting ? "Deleting..." : "Delete"}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <DeleteButton
+            onDelete={handleDeleteRoute}
+            isDeleting={isDeleting}
+            showText={true}
+            size="sm"
+          />
         </div>
       </div>
 

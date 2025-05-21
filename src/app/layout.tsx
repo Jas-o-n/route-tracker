@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
+import QueryProvider from '@/providers/QueryProvider';
 import Header from '@/components/Header';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -20,8 +21,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <Header />
-          {children}
+          <QueryProvider>
+            <Header />
+            {children}
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

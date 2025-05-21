@@ -13,13 +13,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { type Place } from "@/lib/actions/place-actions";
+import { usePlaces } from "@/hooks/usePlaces";
 
 interface PlaceSelectProps {
   value: string;
   onChange: (value: string) => void;
   onAddressChange?: (address: string) => void;
-  places: Place[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   placeholder?: string;
@@ -29,11 +28,11 @@ export function PlaceSelect({
   value,
   onChange,
   onAddressChange,
-  places,
   open,
   onOpenChange,
   placeholder = "Select place",
 }: PlaceSelectProps) {
+  const { places } = usePlaces();
   const selectedPlace = places.find(place => place.name === value);
 
   return (

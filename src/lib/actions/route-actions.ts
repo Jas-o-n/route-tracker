@@ -1,7 +1,7 @@
 // This file would typically interact with the database
 // For demonstration purposes, we'll use mock data
 
-import { Route, RouteModel, RouteWithStats, CreateRouteInput, UpdateRouteInput } from "@/lib/types";
+import { Route, RouteFormData, RouteModel, RouteWithStats, CreateRouteInput, UpdateRouteInput } from "@/lib/types";
 import { db } from "@/lib/db";
 import { routes } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -61,14 +61,14 @@ export async function getRouteById(id: string): Promise<RouteWithStats | null> {
   };
 }
 
-export async function addRoute(routeData: Omit<Route, "id">): Promise<Route> {
+export async function addRoute(routeData: RouteFormData): Promise<Route> {
   const [newRoute] = await db.insert(routes)
     .values({
       startLocation: routeData.startLocation,
       destination: routeData.destination,
       mileage: routeData.mileage,
       date: new Date(routeData.date),
-      notes: routeData.notes,
+      notes: routeData.notes ?? null,
       userID: 'default-user', // You'll want to get this from your auth system
     })
     .returning() as RouteModel[];

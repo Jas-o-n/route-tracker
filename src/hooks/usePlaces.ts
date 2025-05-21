@@ -1,23 +1,40 @@
-import { useEffect, useState } from 'react';
-import { getPlaces, type Place } from '@/lib/actions/place-actions';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getPlaces, addPlace, deletePlace, type Place } from '@/lib/actions/place-actions';
 
 export function usePlaces() {
-  const [places, setPlaces] = useState<Place[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const query = useQuery<Place[]>({
+    queryKey: ['places'],
+    queryFn: getPlaces,
+  });
 
-  useEffect(() => {
-    async function loadPlaces() {
-      try {
-        const data = await getPlaces();
-        setPlaces(data);
-      } catch (error) {
-        console.error('Failed to load places:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadPlaces();
-  }, []);
+  return {
+    places: query.data ?? [],
+    isLoading: query.isLoading,
+    isError: query.isError,
+  };
+}
 
-  return { places, isLoading };
+export function usePlaceMutations() {
+  const queryClient = useQueryClient();
+
+  const addPlaceMutation = useMutation({
+    mutationFn: addPlace,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['places'] });
+    },
+  });
+
+  const deletePlaceMutation = useMutation({
+    mutationFn: deletePlace,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['places'] });
+    },
+  });
+
+  return {
+    addPlace: addPlaceMutation.mutate,
+    deletePlace: deletePlaceMutation.mutate,
+    isAdding: addPlaceMutation.isPending,
+    isDeleting: deletePlaceMutation.isPending,
+  };
 }

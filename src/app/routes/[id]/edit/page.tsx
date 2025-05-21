@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, MapPin } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -19,10 +19,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { getRouteById, updateRoute } from "@/lib/actions/route-actions";
-import Link from "next/link";
 import { PlaceSelect } from "@/components/place-select";
 import { usePlaces } from "@/hooks/usePlaces";
+import { useRoute, useEditRoute } from "@/hooks/useRoutes";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   startLocation: z.string().min(2, {
@@ -41,60 +41,56 @@ const formSchema = z.object({
 export default function EditRoutePage() {
   const params = useParams();
   const router = useRouter();
+  const { toast } = useToast();
   const id = params.id as string;
-  const [loading, setLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { places, isLoading: placesLoading } = usePlaces();
+
+  // Remove places from destructuring since PlaceSelect handles it internally
+  const { isLoading: placesLoading } = usePlaces();
+  const { data: route, isLoading: routeLoading } = useRoute(id);
+  const { updateRoute, isUpdating } = useEditRoute(id);
+
   const [openStart, setOpenStart] = useState(false);
   const [openDest, setOpenDest] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      startLocation: "",
-      destination: "",
-      mileage: undefined,
-      date: "",
-      notes: "",
+      startLocation: route?.startLocation || "",
+      destination: route?.destination || "",
+      mileage: route?.mileage,
+      date: route?.date ? new Date(route.date).toISOString().split("T")[0] : "",
+      notes: route?.notes || "",
     },
   });
 
-  useEffect(() => {
-    async function loadRoute() {
-      try {
-        const route = await getRouteById(id);
-        if (route) {
-          form.reset({
-            startLocation: route.startLocation,
-            destination: route.destination,
-            mileage: route.mileage,
-            date: new Date(route.date).toISOString().split("T")[0],
-            notes: route.notes || "",
-          });
-        }
-      } catch (error) {
-        console.error("Failed to load route:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadRoute();
-  }, [id, form]);
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true);
     try {
-      await updateRoute(id, values);
-      router.push(`/routes/${id}`);
+      await updateRoute(values, {
+        onSuccess: () => {
+          toast({
+            title: "Success",
+            description: "Route updated successfully",
+          });
+          router.push(`/routes/${id}`);
+        },
+        onError: (error) => {
+          toast({
+            title: "Error",
+            description: "Failed to update route. Please try again.",
+            variant: "destructive",
+          });
+        },
+      });
     } catch (error) {
-      console.error("Failed to update route:", error);
-    } finally {
-      setIsSubmitting(false);
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
     }
   }
 
-  if (loading || placesLoading) {
+  if (routeLoading || placesLoading) {
     return (
       <div className="container mx-auto max-w-3xl py-8 px-4 md:px-6 flex justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -128,7 +124,6 @@ export default function EditRoutePage() {
                         <PlaceSelect
                           value={field.value}
                           onChange={field.onChange}
-                          places={places}
                           open={openStart}
                           onOpenChange={setOpenStart}
                           placeholder="Select start location"
@@ -149,7 +144,6 @@ export default function EditRoutePage() {
                         <PlaceSelect
                           value={field.value}
                           onChange={field.onChange}
-                          places={places}
                           open={openDest}
                           onOpenChange={setOpenDest}
                           placeholder="Select destination"
@@ -175,9 +169,6 @@ export default function EditRoutePage() {
                           {...field}
                         />
                       </FormControl>
-                      <FormDescription>
-                        The current reading from your odometer
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -219,8 +210,8 @@ export default function EditRoutePage() {
                 <Button variant="outline" asChild>
                   <Link href={`/routes/${id}`}>Cancel</Link>
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Saving..." : "Save Changes"}
+                <Button type="submit" disabled={isUpdating}>
+                  {isUpdating ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
             </form>

@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Calendar, MapPin, ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getAllRoutes } from "@/lib/actions/route-actions";
 import { Route } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
+import { DeleteButton } from "@/components/DeleteButton";
+import { useRoutes } from "@/hooks/useRoutes";
 
 interface RoutesListProps {
   searchQuery: string;
@@ -17,26 +17,10 @@ interface RoutesListProps {
 }
 
 export default function RoutesList({ searchQuery, sortBy }: RoutesListProps) {
-  const [routes, setRoutes] = useState<Route[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadRoutes() {
-      try {
-        const allRoutes = await getAllRoutes();
-        setRoutes(allRoutes);
-      } catch (error) {
-        console.error("Failed to load routes:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadRoutes();
-  }, []);
+  const { routes: { data: routes, isLoading }, deleteRoute, deletingId } = useRoutes();
 
   // Filter and sort routes
-  const filteredRoutes = routes
+  const filteredRoutes = (routes || [])
     .filter((route) => {
       if (!searchQuery) return true;
       const search = searchQuery.toLowerCase();
@@ -61,7 +45,7 @@ export default function RoutesList({ searchQuery, sortBy }: RoutesListProps) {
       }
     });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-4">
         {[...Array(5)].map((_, i) => (
@@ -86,7 +70,7 @@ export default function RoutesList({ searchQuery, sortBy }: RoutesListProps) {
     );
   }
 
-  if (filteredRoutes.length === 0) {
+  if (!routes?.length) {
     return (
       <Card className="p-6 text-center">
         {searchQuery ? (
@@ -140,12 +124,18 @@ export default function RoutesList({ searchQuery, sortBy }: RoutesListProps) {
                   </div>
                 </div>
               </div>
-
-              <div className="mt-4 md:mt-0 md:ml-4 flex justify-end">
-                <Button asChild variant="outline" size="sm" className="group-hover:bg-primary/5">
+              <div className="mt-4 md:mt-0 md:ml-4 flex justify-end space-x-2">
+                <div>
+                  <DeleteButton
+                    onDelete={() => deleteRoute(route.id)}
+                    isDeleting={deletingId === route.id}
+                    size="sm"
+                  />
+                </div>
+                <Button asChild variant="outline" size="sm" className="hover:bg-primary/5">
                   <Link href={`/routes/${route.id}`}>
                     View Details
-                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform hover:translate-x-1" />
                   </Link>
                 </Button>
               </div>

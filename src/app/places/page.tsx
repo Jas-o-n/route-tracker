@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,55 +22,83 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { addPlace, deletePlace, getPlaces, type Place } from "@/lib/actions/place-actions";
-import { useEffect } from "react";
+import { usePlaces, usePlaceMutations } from "@/hooks/usePlaces";
+import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function PlacesPage() {
-  const router = useRouter();
-  const [places, setPlaces] = useState<Place[]>([]);
+  const { toast } = useToast();
+  const { places, isLoading, isError } = usePlaces();
+  const { addPlace, deletePlace, isAdding, isDeleting } = usePlaceMutations();
   const [newPlace, setNewPlace] = useState({ name: "", address: "" });
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    loadPlaces();
-  }, []);
-
-  async function loadPlaces() {
-    try {
-      const data = await getPlaces();
-      setPlaces(data);
-    } catch (error) {
-      console.error("Failed to load places:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
 
   async function handleAddPlace(e: React.FormEvent) {
     e.preventDefault();
     try {
-      const place = await addPlace(newPlace);
-      setPlaces([...places, place]);
-      setNewPlace({ name: "", address: "" });
+      await addPlace(newPlace, {
+        onSuccess: () => {
+          toast({
+            title: "Success",
+            description: "Place added successfully",
+          });
+          setNewPlace({ name: "", address: "" });
+        },
+        onError: () => {
+          toast({
+            title: "Error",
+            description: "Failed to add place. Please try again.",
+            variant: "destructive",
+          });
+        },
+      });
     } catch (error) {
-      console.error("Failed to add place:", error);
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
     }
   }
 
   async function handleDeletePlace(id: string) {
     try {
-      await deletePlace(id);
-      setPlaces(places.filter(place => place.id !== id));
+      await deletePlace(id, {
+        onSuccess: () => {
+          toast({
+            title: "Success",
+            description: "Place deleted successfully",
+          });
+        },
+        onError: () => {
+          toast({
+            title: "Error",
+            description: "Failed to delete place. Please try again.",
+            variant: "destructive",
+          });
+        },
+      });
     } catch (error) {
-      console.error("Failed to delete place:", error);
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
     }
   }
 
   if (isLoading) {
     return (
       <div className="container mx-auto max-w-5xl py-8 px-4 md:px-6">
-        <div className="flex justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <h1 className="text-3xl font-bold tracking-tight mb-8">Saved Places</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="pb-3">
+                <Skeleton className="h-5 w-32 mb-2" />
+                <Skeleton className="h-4 w-48" />
+              </CardHeader>
+            </Card>
+          ))}
         </div>
       </div>
     );
@@ -124,7 +151,7 @@ export default function PlacesPage() {
                 </div>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
+                    <Button variant="destructive" size="icon">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </AlertDialogTrigger>

@@ -37,3 +37,25 @@ export type CreateRouteInput = Omit<Route, 'id' | 'createdAt' | 'updatedAt'>;
 
 // Input type for updating routes
 export type UpdateRouteInput = Partial<CreateRouteInput>;
+
+// New type specifically for the form
+export type RouteFormData = {
+  startLocation: string;
+  destination: string;
+  mileage: number;
+  date: string;
+  notes?: string;
+};
+
+export interface MostFrequentRoute {
+  from: string;
+  to: string;
+  count: number;
+}
+
+export interface RouteStats {
+  totalRoutes: number;
+  totalMiles: number;
+  avgMileagePerRoute: number;
+  mostFrequentRoute: MostFrequentRoute | null;
+}

@@ -1,36 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Calendar, MapPin } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getRecentRoutes } from "@/lib/actions/route-actions";
-import { Route } from "@/lib/types";
+import { useRecentRoutes } from "@/hooks/useRoutes";
 import { formatDate } from "@/lib/utils";
 
 export default function RecentRoutes() {
-  const [routes, setRoutes] = useState<Route[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: routes, isLoading } = useRecentRoutes();
 
-  useEffect(() => {
-    async function loadRoutes() {
-      try {
-        const recentRoutes = await getRecentRoutes();
-        setRoutes(recentRoutes);
-      } catch (error) {
-        console.error("Failed to load recent routes:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadRoutes();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[...Array(3)].map((_, i) => (
@@ -51,7 +33,7 @@ export default function RecentRoutes() {
     );
   }
 
-  if (routes.length === 0) {
+  if (!routes?.length) {
     return (
       <Card className="p-6 text-center">
         <p className="text-muted-foreground mb-4">You haven't added any routes yet.</p>
