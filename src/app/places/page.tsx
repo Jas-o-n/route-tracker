@@ -124,7 +124,7 @@ export default function PlacesPage() {
                   required
                 />
                 <AddressInput
-                  placeholder="Search for address"
+                  placeholder="Search for an address"
                   onSelect={(place) => setNewPlace({ ...newPlace, address: place.place_name })}
                 />
               </div>

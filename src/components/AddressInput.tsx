@@ -8,12 +8,7 @@ import {
   CommandInput,
   CommandItem,
 } from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface MapboxFeature {
   id: string;
@@ -36,7 +31,7 @@ interface MapboxResponse {
 export default function AddressInput({ onSelect, placeholder = "Enter address" }: AddressInputProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<MapboxFeature[]>([]);
-  const [open, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const debouncedFetchRef = useRef<ReturnType<typeof debounce>>();
@@ -89,73 +84,61 @@ export default function AddressInput({ onSelect, placeholder = "Enter address" }
 
   const handleInputChange = (value: string) => {
     setQuery(value);
+    setIsOpen(!!value);
     debouncedFetchRef.current?.(value);
   };
 
-  const handleOpenChange = (isOpen: boolean) => {
-    setOpen(isOpen);
-    if (isOpen && query) {
-      debouncedFetchRef.current?.(query);
-    }
-  };
-
-  const handleSelect = (place: any) => {
+  const handleSelect = (place: MapboxFeature) => {
     setQuery(place.place_name);
     setResults([]);
-    setOpen(false);
+    setIsOpen(false);
     onSelect(place);
   };
 
   return (
-    <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          className="w-full justify-between"
-        >
-          <div className="flex items-center">
-            <MapPin className="mr-2 h-4 w-4 shrink-0" />
-            {query || placeholder}
-          </div>
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)]" sideOffset={4}>
-        <Command shouldFilter={false}> {/* Prevent Command from filtering results */}
-          <CommandInput
-            placeholder={placeholder}
-            value={query}
-            onValueChange={handleInputChange}
-          />
-          <CommandEmpty>
-            {isLoading ? (
-              'Loading...'
-            ) : error ? (
-              <span className="text-destructive">{error}</span>
-            ) : (
-              'No results found.'
-            )}
-          </CommandEmpty>
-          <CommandGroup>
-            {results.map((place: any) => (
-              <CommandItem
-                key={place.id}
-                onSelect={() => handleSelect(place)}
-              >
-                <div className="flex items-center">
-                  <MapPin className="mr-2 h-4 w-4 shrink-0" />
-                  <div className="flex flex-col">
-                    <span>{place.text}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {place.place_name}
-                    </span>
+    <div className="relative">
+      <div className="flex items-center relative z-20">
+        <input
+          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          placeholder={placeholder}
+          value={query}
+          onChange={(e) => handleInputChange(e.target.value)}
+        />
+      </div>
+
+      {isOpen && (
+        <div className="absolute top-[calc(100%+4px)] w-full z-10 rounded-md border bg-popover shadow-md">
+          <Command>
+            <CommandEmpty>
+              {isLoading ? (
+                'Loading...'
+              ) : error ? (
+                <span className="text-destructive">{error}</span>
+              ) : (
+                'No results found.'
+              )}
+            </CommandEmpty>
+            <CommandGroup>
+              {results.map((place) => (
+                <CommandItem
+                  key={place.id}
+                  onSelect={() => handleSelect(place)}
+                >
+                  <div className="flex items-center">
+                    <MapPin className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
+                    <div className="flex flex-col">
+                      <span>{place.text}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {place.place_name}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        </Command>
-      </PopoverContent>
-    </Popover>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </Command>
+        </div>
+      )}
+    </div>
   );
 }
