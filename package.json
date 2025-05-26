@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
+    "@mapbox/mapbox-gl-geocoder": "^5.0.3",
     "@neondatabase/serverless": "^1.0.0",
     "@next/swc-wasm-nodejs": "15.3.2",
     "@radix-ui/react-accordion": "^1.2.10",
@@ -57,7 +58,9 @@
     "eslint": "^9.26.0",
     "eslint-config-next": "^15.3.2",
     "input-otp": "^1.4.2",
+    "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.510.0",
+    "mapbox-gl": "^3.12.0",
     "next": "15.3.2",
     "next-themes": "^0.4.6",
     "postcss": "8.5.3",
@@ -72,10 +75,11 @@
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.0.4",
     "vaul": "^1.1.2",
-    "zod": "^3.24.4"
+    "zod": "^3.25.12"
   },
   "devDependencies": {
     "@types/eslint": "^8.44.0",
+    "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^20.14.10",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",

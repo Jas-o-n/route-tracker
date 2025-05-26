@@ -25,6 +25,7 @@ import {
 import { usePlaces, usePlaceMutations } from "@/hooks/usePlaces";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import AddressInput from "@/components/AddressInput";
 
 export default function PlacesPage() {
   const { toast } = useToast();
@@ -122,11 +123,9 @@ export default function PlacesPage() {
                   onChange={(e) => setNewPlace({ ...newPlace, name: e.target.value })}
                   required
                 />
-                <Input
-                  placeholder="Address"
-                  value={newPlace.address}
-                  onChange={(e) => setNewPlace({ ...newPlace, address: e.target.value })}
-                  required
+                <AddressInput
+                  placeholder="Search for address"
+                  onSelect={(place) => setNewPlace({ ...newPlace, address: place.place_name })}
                 />
               </div>
               <div className="flex justify-end">
