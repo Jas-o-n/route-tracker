@@ -133,9 +133,9 @@ export default function RoutesList({ searchQuery, sortBy }: RoutesListProps) {
                   />
                 </div>
                 <Button asChild variant="outline" size="sm" className="hover:bg-primary/5">
-                  <Link href={`/routes/${route.id}`}>
+                  <Link href={`/routes/${route.id}`} className="group/button">
                     View Details
-                    <ArrowRight className="ml-2 h-4 w-4 transition-transform hover:translate-x-1" />
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/button:translate-x-1" />
                   </Link>
                 </Button>
               </div>
