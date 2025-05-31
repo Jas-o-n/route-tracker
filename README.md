@@ -4,6 +4,8 @@ Todo:
     -[x] ability to choose from places when adding a route
     -[x] display place address in route details
 -[x] address autocomplete
+    -[] geolocation for better suggestions
+    -[] store location cords
 -[] view route map
 -[] export routes on certain dates to csv
 
