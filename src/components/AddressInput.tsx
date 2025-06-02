@@ -7,14 +7,41 @@ import {
   CommandInput,
   CommandItem,
 } from "@/components/ui/command";
-import { useAddressSearch, type MapboxFeature } from "@/hooks/useMapbox";
+import { useAddressSearch, type SearchBoxFeature } from "@/hooks/useMapbox";
 
 interface AddressInputProps {
-  onSelect: (place: MapboxFeature) => void;
+  onSelect: (place: SearchBoxFeature) => void;
   placeholder?: string;
 }
 
-export default function AddressInput({ onSelect, placeholder = "Enter address" }: AddressInputProps) {
+function getUniqueKey(place: SearchBoxFeature, index: number): string {
+  return [
+    place.place_formatted || "",
+    index,
+  ]
+    .filter(Boolean)
+    .join("-") || `result-${index}`;
+}
+
+function formatAddressSuggestion(place: SearchBoxFeature) {
+  const mainLine = place.address;
+
+  const contextParts = [
+    place.context.place.name,
+    place.context.postcode.name,
+    place.context.country.name
+  ].filter(Boolean);
+
+  return {
+    mainLine: mainLine || 'Unknown location',
+    contextLine: contextParts.join(', ') || place.place_formatted || '',
+  };
+}
+
+export default function AddressInput({
+  onSelect,
+  placeholder = "Enter address",
+}: AddressInputProps) {
   const [query, setQuery] = useState("");
   const [inputValue, setInputValue] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -27,8 +54,13 @@ export default function AddressInput({ onSelect, placeholder = "Enter address" }
     setIsOpen(!!value);
   };
 
-  const handleSelect = (place: MapboxFeature) => {
-    setInputValue(place.place_name);
+  const handleSelect = (place: SearchBoxFeature) => {
+    const fullAddress = [
+      place.address,
+      place.place_formatted
+    ].filter(Boolean).join(', ');
+    
+    setInputValue(fullAddress);
     setQuery("");
     setIsOpen(false);
     onSelect(place);
@@ -50,30 +82,38 @@ export default function AddressInput({ onSelect, placeholder = "Enter address" }
           <Command>
             <CommandEmpty>
               {isLoading ? (
-                'Loading...'
+                "Loading..."
               ) : error ? (
-                <span className="text-destructive">{error instanceof Error ? error.message : 'Error loading results'}</span>
+                <span className="text-destructive">
+                  {error instanceof Error ? error.message : "Error loading results"}
+                </span>
               ) : (
-                'No results found.'
+                "No results found."
               )}
             </CommandEmpty>
             <CommandGroup>
-              {results.map((place) => (
-                <CommandItem
-                  key={place.id}
-                  onSelect={() => handleSelect(place)}
-                >
-                  <div className="flex items-center">
-                    <MapPin className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
-                    <div className="flex flex-col">
-                      <span>{place.text}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {place.place_name}
-                      </span>
+              {results.map((place, index) => {
+                const { mainLine, contextLine } = formatAddressSuggestion(place);
+                return (
+                  <CommandItem
+                    key={getUniqueKey(place, index)}
+                    onSelect={() => handleSelect(place)}
+                    value={mainLine}
+                  >
+                    <div className="flex items-center">
+                      <MapPin className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">{mainLine}</span>
+                        {contextLine && (
+                          <span className="text-sm text-muted-foreground">
+                            {contextLine}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </CommandItem>
-              ))}
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
           </Command>
         </div>

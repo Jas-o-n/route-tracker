@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getPlaces, addPlace, deletePlace, type Place } from '@/lib/actions/place-actions';
+import { SearchBoxFeature } from '@/lib/schemas/places';
 
 export function usePlaces() {
   const query = useQuery<Place[]>({
@@ -17,14 +18,21 @@ export function usePlaces() {
 export function usePlaceMutations() {
   const queryClient = useQueryClient();
 
-  const addPlaceMutation = useMutation({
-    mutationFn: addPlace,
+  const addMutation = useMutation({
+    mutationFn: (feature: SearchBoxFeature) => {
+      console.log('Mutation executing with feature:', feature);
+      return addPlace(feature);
+    },
     onSuccess: () => {
+      console.log('Mutation succeeded, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['places'] });
+    },
+    onError: (error) => {
+      console.error('Mutation failed:', error);
     },
   });
 
-  const deletePlaceMutation = useMutation({
+  const deleteMutation = useMutation({
     mutationFn: deletePlace,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['places'] });
@@ -32,9 +40,9 @@ export function usePlaceMutations() {
   });
 
   return {
-    addPlace: addPlaceMutation.mutate,
-    deletePlace: deletePlaceMutation.mutate,
-    isAdding: addPlaceMutation.isPending,
-    isDeleting: deletePlaceMutation.isPending,
+    addPlace: addMutation.mutate,
+    deletePlace: deleteMutation.mutate,
+    isAdding: addMutation.isPending,
+    isDeleting: deleteMutation.isPending,
   };
 }

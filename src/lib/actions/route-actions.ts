@@ -1,93 +1,112 @@
-// This file would typically interact with the database
-// For demonstration purposes, we'll use mock data
-
-import { Route, RouteFormData, RouteModel, RouteWithStats, CreateRouteInput, UpdateRouteInput } from "@/lib/types";
+import { 
+  routeSchema, 
+  routeWithStatsSchema, 
+  routeFormSchema,
+  routeModelSchema,
+  type Route,
+  type RouteWithStats,
+  type RouteFormData,
+  type RouteModel,
+} from "@/lib/schemas/routes";
 import { db } from "@/lib/db";
 import { routes } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 
-// Helper function to convert database model to API response
 function convertToRoute(model: RouteModel): Route {
-  return {
-    ...model,
-    date: model.date.toISOString(),
-    createdAt: model.createdAt.toISOString(),
-    updatedAt: model.updatedAt.toISOString(),
+  // Validate the model first
+  const validatedModel = routeModelSchema.parse(model);
+  
+  const route = {
+    ...validatedModel,
+    date: validatedModel.date.toISOString(),
+    createdAt: validatedModel.createdAt.toISOString(),
+    updatedAt: validatedModel.updatedAt.toISOString(),
   };
+  
+  return routeSchema.parse(route);
 }
 
 export async function getRecentRoutes(limit = 3): Promise<Route[]> {
   const result = await db.query.routes.findMany({
     orderBy: [desc(routes.date)],
     limit: limit,
-  }) as RouteModel[];
-  return result.map(convertToRoute);
+  });
+
+  return result.map(model => convertToRoute(routeModelSchema.parse(model)));
 }
 
 export async function getAllRoutes(): Promise<Route[]> {
   const result = await db.query.routes.findMany({
     orderBy: [desc(routes.date)],
-  }) as RouteModel[];
-  return result.map(convertToRoute);
+  });
+
+  return result.map(model => convertToRoute(routeModelSchema.parse(model)));
 }
 
 export async function getRouteById(id: string): Promise<RouteWithStats | null> {
   const route = await db.query.routes.findFirst({
     where: eq(routes.id, id),
-  }) as RouteModel | null;
+  });
   
   if (!route) {
     return null;
   }
+
+  const validatedRoute = routeModelSchema.parse(route);
   
-  // Get similar routes for stats
   const similarRoutes = await db.query.routes.findMany({
     where: (routes, { and, eq }) => and(
-      eq(routes.startLocation, route.startLocation),
-      eq(routes.destination, route.destination)
+      eq(routes.startLocation, validatedRoute.startLocation),
+      eq(routes.destination, validatedRoute.destination)
     ),
-  }) as RouteModel[];
+  });
+
+  const validatedSimilarRoutes = similarRoutes.map(r => routeModelSchema.parse(r));
   
   const stats = {
-    timesDriven: similarRoutes.length,
-    avgMileage: similarRoutes.reduce((sum, r) => sum + Number(r.mileage), 0) / similarRoutes.length,
-    lastDriven: similarRoutes
-      .sort((a, b) => b.date.getTime() - a.date.getTime())[0].date.toISOString(),
+    timesDriven: validatedSimilarRoutes.length,
+    avgMileage: validatedSimilarRoutes.reduce((sum, r) => sum + r.mileage, 0) / validatedSimilarRoutes.length,
+    lastDriven: validatedSimilarRoutes
+      .sort((a, b) => b.date.getTime() - a.date.getTime())[0]
+      .date.toISOString(),
   };
   
-  return {
-    ...convertToRoute(route),
+  return routeWithStatsSchema.parse({
+    ...convertToRoute(validatedRoute),
     stats,
-  };
+  });
 }
 
-export async function addRoute(routeData: RouteFormData): Promise<Route> {
+export async function addRoute(data: RouteFormData): Promise<Route> {
+  // Validate input
+  const validatedData = routeFormSchema.parse(data);
+
   const [newRoute] = await db.insert(routes)
     .values({
-      startLocation: routeData.startLocation,
-      destination: routeData.destination,
-      mileage: routeData.mileage,
-      date: new Date(routeData.date),
-      notes: routeData.notes ?? null,
-      userID: 'default-user', // You'll want to get this from your auth system
+      startLocation: validatedData.startLocation,
+      destination: validatedData.destination,
+      mileage: validatedData.mileage,
+      date: new Date(validatedData.date),
+      notes: validatedData.notes ?? null,
+      userID: 'default-user',
     })
-    .returning() as RouteModel[];
+    .returning();
   
   return convertToRoute(newRoute);
 }
 
-export async function updateRoute(id: string, routeData: Partial<Route>): Promise<Route | null> {
+export async function updateRoute(id: string, data: Partial<RouteFormData>): Promise<Route | null> {
+  // Partial validation of input
+  const validatedData = routeFormSchema.partial().parse(data);
+
   const [updatedRoute] = await db.update(routes)
     .set({
-      startLocation: routeData.startLocation,
-      destination: routeData.destination,
-      mileage: routeData.mileage,
-      date: routeData.date ? new Date(routeData.date) : undefined,
-      notes: routeData.notes,
+      ...validatedData,
+      date: validatedData.date ? new Date(validatedData.date) : undefined,
       updatedAt: new Date(),
     })
     .where(eq(routes.id, id))
-    .returning() as RouteModel[];
+    .returning();
     
   return updatedRoute ? convertToRoute(updatedRoute) : null;
 }

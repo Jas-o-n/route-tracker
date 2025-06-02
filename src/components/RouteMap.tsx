@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RouteWithStats } from "@/lib/types";
+import { RouteWithStats } from "@/lib/schemas/routes";
 
 interface RouteMapProps {
   route: RouteWithStats;

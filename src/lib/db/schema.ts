@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, integer, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, integer, uuid, decimal } from "drizzle-orm/pg-core";
 
 export const routes = pgTable("routes", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -15,7 +15,15 @@ export const routes = pgTable("routes", {
 export const places = pgTable("places", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
-  address: text("address").notNull(),
+  full_address: text("full_address").notNull(),
+  addressLine1: text("address_line1"),
+  addressLine2: text("address_line2"),
+  city: text("city"),
+  region: text("region"),
+  postcode: text("postcode"),
+  country: text("country"),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }).notNull(),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }).notNull(),
   userID: text("user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

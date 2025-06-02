@@ -4,7 +4,7 @@ import { Car, Route as RouteIcon, MapPin, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouteStats } from "@/hooks/useRoutes";
-import { RouteStats } from "@/lib/types";
+import { RouteStats } from "@/lib/schemas/routes";
 
 interface RouteStatsPreviewProps {
   initialStats?: RouteStats | null;

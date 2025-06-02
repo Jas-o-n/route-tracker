@@ -26,36 +26,47 @@ import { usePlaces, usePlaceMutations } from "@/hooks/usePlaces";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import AddressInput from "@/components/AddressInput";
+import { SearchBoxFeature } from "@/hooks/useMapbox";
 
 export default function PlacesPage() {
   const { toast } = useToast();
   const { places, isLoading, isError } = usePlaces();
   const { addPlace, deletePlace, isAdding, isDeleting } = usePlaceMutations();
-  const [newPlace, setNewPlace] = useState({ name: "", address: "" });
+  const [selectedFeature, setSelectedFeature] = useState<SearchBoxFeature | null>(null);
+  const [placeName, setPlaceName] = useState("");
 
   async function handleAddPlace(e: React.FormEvent) {
     e.preventDefault();
-    try {
-      await addPlace(newPlace, {
-        onSuccess: () => {
-          toast({
-            title: "Success",
-            description: "Place added successfully",
-          });
-          setNewPlace({ name: "", address: "" });
-        },
-        onError: () => {
-          toast({
-            title: "Error",
-            description: "Failed to add place. Please try again.",
-            variant: "destructive",
-          });
-        },
-      });
-    } catch (error) {
+    
+    if (!selectedFeature || !placeName) {
       toast({
         title: "Error",
-        description: "Something went wrong. Please try again.",
+        description: "Please enter a name and select an address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const featureWithName = {
+        ...selectedFeature,
+        name: placeName,
+      };
+
+      addPlace(featureWithName);
+      
+      setSelectedFeature(null);
+      setPlaceName("");
+      
+      toast({
+        title: "Success",
+        description: "Place added successfully",
+      });
+    } catch (error) {
+      console.error('Error in handleAddPlace:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to add place",
         variant: "destructive",
       });
     }
@@ -119,19 +130,28 @@ export default function PlacesPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                   placeholder="Place name (e.g., Home, Office)"
-                  value={newPlace.name}
-                  onChange={(e) => setNewPlace({ ...newPlace, name: e.target.value })}
+                  value={placeName}
+                  onChange={(e) => setPlaceName(e.target.value)}
                   required
                 />
                 <AddressInput
                   placeholder="Search for an address"
-                  onSelect={(place) => setNewPlace({ ...newPlace, address: place.place_name })}
+                  onSelect={(place) => setSelectedFeature(place)}
                 />
               </div>
               <div className="flex justify-end">
-                <Button type="submit">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Place
+                <Button 
+                  type="submit" 
+                  disabled={!selectedFeature || !placeName || isAdding}
+                >
+                  {isAdding ? (
+                    <>Loading...</>
+                  ) : (
+                    <>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Place
+                    </>
+                  )}
                 </Button>
               </div>
             </form>

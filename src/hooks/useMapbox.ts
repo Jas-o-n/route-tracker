@@ -1,30 +1,24 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-
-interface MapboxFeature {
-  id: string;
-  place_name: string;
-  text: string;
-  center: [number, number];
-}
-
-interface MapboxResponse {
-  features: MapboxFeature[];
-}
+import type { SearchBoxFeature } from '@/lib/schemas/places';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
-async function searchAddress(query: string, signal?: AbortSignal) {
-  if (!query || query.length < 2) {
-    return [];
-  }
+interface SearchBoxResponse {
+  suggestions: SearchBoxFeature[];
+}
+
+const sessionToken = crypto.randomUUID();
+
+async function searchAddress(query: string, signal?: AbortSignal): Promise<SearchBoxFeature[]> {
+  if (!query || query.length < 2) return [];
 
   if (!MAPBOX_TOKEN) {
     throw new Error("Address autocomplete is not available - API token not configured");
   }
 
   const res = await fetch(
-    `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&autocomplete=true`,
+    `https://api.mapbox.com/search/searchbox/v1/suggest?q=${encodeURIComponent(query)}&access_token=${MAPBOX_TOKEN}&session_token=${sessionToken}&language=en&limit=5`,
     { signal }
   );
 
@@ -32,8 +26,8 @@ async function searchAddress(query: string, signal?: AbortSignal) {
     throw new Error(`Mapbox API error: ${res.statusText}`);
   }
 
-  const data: MapboxResponse = await res.json();
-  return data.features;
+  const data: SearchBoxResponse = await res.json();
+  return data.suggestions;
 }
 
 export function useAddressSearch(query: string) {
@@ -51,13 +45,13 @@ export function useAddressSearch(query: string) {
     queryKey: ['address-search', debouncedQuery],
     queryFn: ({ signal }) => searchAddress(debouncedQuery, signal),
     enabled: debouncedQuery.length >= 2,
-    staleTime: 1000 * 60 * 5, // Cache results for 5 minutes
+    staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
     retry: false,
-    gcTime: 1000 * 60 * 60, // 1 hour
+    gcTime: 1000 * 60 * 60,
   });
 }
 
-export type { MapboxFeature };
+export type { SearchBoxFeature };

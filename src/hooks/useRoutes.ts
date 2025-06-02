@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as routeActions from '@/lib/actions/route-actions';
-import { Route, RouteFormData, RouteWithStats, UpdateRouteInput } from '@/lib/types';
+import { Route, RouteFormData, RouteWithStats, UpdateRouteInput } from '@/lib/schemas/routes';
 
 interface DeleteOptions {
   onSuccess?: () => void;
