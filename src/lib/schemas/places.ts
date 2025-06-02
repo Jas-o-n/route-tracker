@@ -20,14 +20,15 @@ export const placeModelSchema = z.object({
 
 // API/Frontend schema (dates as ISO strings, optional fields as undefined)
 export const placeSchema = placeModelSchema.extend({
+  address: z.string().min(1), // Make explicit that this maps from full_address
   addressLine1: z.string().optional(),
   addressLine2: z.string().optional(),
   city: z.string().optional(),
   region: z.string().optional(),
   postcode: z.string().optional(),
   country: z.string().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
+  createdAt: z.string().datetime({ offset: true }),
+  updatedAt: z.string().datetime({ offset: true }),
 });
 
 const contextItemSchema = z.object({
@@ -37,12 +38,12 @@ const contextItemSchema = z.object({
 
 // Mapbox Search Box API response schema
 export const searchBoxFeatureSchema = z.object({
-  name: z.string(),
-  mapbox_id: z.string(),
-  feature_type: z.string(),
-  address: z.string(),
-  full_address: z.string(),
-  place_formatted: z.string(),
+  name: z.string().min(1),
+  mapbox_id: z.string().min(1),
+  feature_type: z.string().min(1),
+  address: z.string().min(1),
+  full_address: z.string().min(1),
+  place_formatted: z.string().min(1),
   context: z.object({
     country: contextItemSchema,
     region: contextItemSchema,
@@ -50,11 +51,14 @@ export const searchBoxFeatureSchema = z.object({
     place: contextItemSchema,
     coordinates: z
       .object({
-        latitude: z.number(),
-        longitude: z.number(),
+        latitude: z.number().min(-90).max(90),
+        longitude: z.number().min(-180).max(180),
       })
       .optional(),
-    center: z.array(z.number()).length(2).optional(),
+    center: z.tuple([
+      z.number().min(-180).max(180), // longitude
+      z.number().min(-90).max(90)    // latitude
+    ]).optional(),
   }),
   language: z.string().optional(),
   maki: z.string().optional(),

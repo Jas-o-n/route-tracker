@@ -32,7 +32,7 @@ export const routeFormSchema = z.object({
   destination: z.string().min(1),
   mileage: z.number().int().positive(),
   date: z.string().datetime(),
-  notes: z.string().optional(),
+  notes: z.string().nullable(),
 });
 
 // Most Frequent Route schema

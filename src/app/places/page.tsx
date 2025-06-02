@@ -26,7 +26,7 @@ import { usePlaces, usePlaceMutations } from "@/hooks/usePlaces";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import AddressInput from "@/components/AddressInput";
-import { SearchBoxFeature } from "@/hooks/useMapbox";
+import { SearchBoxFeature } from "@/lib/schemas/places";
 
 export default function PlacesPage() {
   const { toast } = useToast();

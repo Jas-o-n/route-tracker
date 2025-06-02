@@ -15,8 +15,14 @@ interface AddressInputProps {
 }
 
 function getUniqueKey(place: SearchBoxFeature, index: number): string {
+  // Use mapbox_id as primary identifier, fall back to structured approach
+  if (place.mapbox_id) {
+    return place.mapbox_id;
+  }
+  
   return [
-    place.place_formatted || "",
+    place.place_formatted || place.full_address || place.address || "",
+    place.name,
     index,
   ]
     .filter(Boolean)
@@ -27,9 +33,9 @@ function formatAddressSuggestion(place: SearchBoxFeature) {
   const mainLine = place.address;
 
   const contextParts = [
-    place.context.place.name,
-    place.context.postcode.name,
-    place.context.country.name
+    place.context?.place?.name,
+    place.context?.postcode?.name,
+    place.context?.country?.name
   ].filter(Boolean);
 
   return {
