@@ -59,3 +59,12 @@ export interface RouteStats {
   avgMileagePerRoute: number;
   mostFrequentRoute: MostFrequentRoute | null;
 }
+
+export interface Place {
+  id: string;
+  name: string;
+  address: string;
+  userID: string;
+  createdAt: string;
+  updatedAt: string;
+}

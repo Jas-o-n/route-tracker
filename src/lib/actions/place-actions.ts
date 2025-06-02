@@ -1,15 +1,9 @@
 import { db } from "@/lib/db";
 import { places } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { Place } from "@/lib/types";
 
-export interface Place {
-  id: string;
-  name: string;
-  address: string;
-  userID: string;
-  createdAt: string;
-  updatedAt: string;
-}
+
 
 export async function getPlaces(): Promise<Place[]> {
   const result = await db.query.places.findMany({
