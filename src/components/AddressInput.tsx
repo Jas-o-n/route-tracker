@@ -16,16 +16,19 @@ interface AddressInputProps {
 
 export default function AddressInput({ onSelect, placeholder = "Enter address" }: AddressInputProps) {
   const [query, setQuery] = useState("");
+  const [inputValue, setInputValue] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
   const { data: results = [], isLoading, error } = useAddressSearch(query);
 
   const handleInputChange = (value: string) => {
     setQuery(value);
+    setInputValue(value);
     setIsOpen(!!value);
   };
 
   const handleSelect = (place: MapboxFeature) => {
+    setInputValue(place.place_name);
     setQuery("");
     setIsOpen(false);
     onSelect(place);
@@ -37,6 +40,7 @@ export default function AddressInput({ onSelect, placeholder = "Enter address" }
         <input
           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           placeholder={placeholder}
+          value={inputValue}
           onChange={(e) => handleInputChange(e.target.value)}
         />
       </div>
