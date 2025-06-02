@@ -1,5 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import debounce from "lodash.debounce";
+import { useState } from "react";
 import { MapPin } from "lucide-react";
 import {
   Command,
@@ -8,89 +7,26 @@ import {
   CommandInput,
   CommandItem,
 } from "@/components/ui/command";
-import { cn } from "@/lib/utils";
-
-interface MapboxFeature {
-  id: string;
-  place_name: string;
-  text: string;
-  center: [number, number];
-}
+import { useAddressSearch, type MapboxFeature } from "@/hooks/useMapbox";
 
 interface AddressInputProps {
   onSelect: (place: MapboxFeature) => void;
   placeholder?: string;
 }
 
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-
-interface MapboxResponse {
-  features: MapboxFeature[];
-}
-
 export default function AddressInput({ onSelect, placeholder = "Enter address" }: AddressInputProps) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<MapboxFeature[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const debouncedFetchRef = useRef<ReturnType<typeof debounce>>();
 
-  const setupDebouncedFetch = useCallback(() => {
-    debouncedFetchRef.current = debounce(async (value: string) => {
-      if (!value || value.length < 2) {
-        setResults([]);
-        setError(null);
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        if (!MAPBOX_TOKEN) return;
-
-        const res = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(value)}.json?access_token=${MAPBOX_TOKEN}&autocomplete=true`
-        );
-
-        if (!res.ok) {
-          throw new Error(`Mapbox API error: ${res.statusText}`);
-        }
-
-        const data: MapboxResponse = await res.json();
-        setResults(data.features);
-      } catch (error) {
-        setResults([]);
-        setError(error instanceof Error ? error.message : 'Failed to fetch suggestions');
-      } finally {
-        setIsLoading(false);
-      }
-    }, 300);
-  }, []);
-
-  useEffect(() => {
-    setupDebouncedFetch();
-    return () => {
-      debouncedFetchRef.current?.cancel();
-    };
-  }, [setupDebouncedFetch]);
-
-  useEffect(() => {
-    if (!MAPBOX_TOKEN) {
-      setError("Address autocomplete is not available - API token not configured");
-    }
-  }, []);
+  const { data: results = [], isLoading, error } = useAddressSearch(query);
 
   const handleInputChange = (value: string) => {
     setQuery(value);
     setIsOpen(!!value);
-    debouncedFetchRef.current?.(value);
   };
 
   const handleSelect = (place: MapboxFeature) => {
-    setQuery(place.place_name);
-    setResults([]);
+    setQuery("");
     setIsOpen(false);
     onSelect(place);
   };
@@ -101,7 +37,6 @@ export default function AddressInput({ onSelect, placeholder = "Enter address" }
         <input
           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           placeholder={placeholder}
-          value={query}
           onChange={(e) => handleInputChange(e.target.value)}
         />
       </div>
@@ -113,7 +48,7 @@ export default function AddressInput({ onSelect, placeholder = "Enter address" }
               {isLoading ? (
                 'Loading...'
               ) : error ? (
-                <span className="text-destructive">{error}</span>
+                <span className="text-destructive">{error instanceof Error ? error.message : 'Error loading results'}</span>
               ) : (
                 'No results found.'
               )}

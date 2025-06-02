@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Route } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import { DeleteButton } from "@/components/DeleteButton";
 import { useRoutes } from "@/hooks/useRoutes";
