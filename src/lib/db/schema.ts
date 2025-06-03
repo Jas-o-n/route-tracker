@@ -22,6 +22,7 @@ export const places = pgTable("places", {
   region: text("region"),
   postcode: text("postcode"),
   country: text("country"),
+  // High precision coordinates stored as decimal
   latitude: decimal("latitude", { precision: 10, scale: 7 }).notNull(),
   longitude: decimal("longitude", { precision: 10, scale: 7 }).notNull(),
   userID: text("user_id").notNull(),

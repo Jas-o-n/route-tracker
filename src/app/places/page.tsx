@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,22 +20,24 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { usePlaces, usePlaceMutations } from "@/hooks/usePlaces";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import AddressInput from "@/components/AddressInput";
+import { usePlaces, usePlaceMutations } from "@/hooks/usePlaces";
+import { useToast } from "@/hooks/use-toast";
 import { SearchBoxFeature } from "@/lib/schemas/places";
 
 export default function PlacesPage() {
   const { toast } = useToast();
-  const { places, isLoading, isError } = usePlaces();
-  const { addPlace, deletePlace, isAdding, isDeleting } = usePlaceMutations();
+  const { places, isLoading } = usePlaces();
+  const { addPlace, deletePlace, isAdding } = usePlaceMutations();
   const [selectedFeature, setSelectedFeature] = useState<SearchBoxFeature | null>(null);
   const [placeName, setPlaceName] = useState("");
+  const [placeAddress, setPlaceAddress] = useState("");
 
   async function handleAddPlace(e: React.FormEvent) {
     e.preventDefault();
-    
+
     if (!selectedFeature || !placeName) {
       toast({
         title: "Error",
@@ -48,22 +48,15 @@ export default function PlacesPage() {
     }
 
     try {
-      const featureWithName = {
+      await addPlace({
         ...selectedFeature,
-        name: placeName,
-      };
-
-      addPlace(featureWithName);
-      
+        place_name: placeName,
+      });
       setSelectedFeature(null);
       setPlaceName("");
-      
-      toast({
-        title: "Success",
-        description: "Place added successfully",
-      });
+      setPlaceAddress("");
+      toast({ title: "Success", description: "Place added successfully" });
     } catch (error) {
-      console.error('Error in handleAddPlace:', error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to add place",
@@ -76,10 +69,7 @@ export default function PlacesPage() {
     try {
       await deletePlace(id, {
         onSuccess: () => {
-          toast({
-            title: "Success",
-            description: "Place deleted successfully",
-          });
+          toast({ title: "Success", description: "Place deleted successfully" });
         },
         onError: () => {
           toast({
@@ -123,38 +113,21 @@ export default function PlacesPage() {
         <Card>
           <CardHeader>
             <CardTitle>Add New Place</CardTitle>
-            <CardDescription>Save frequently used addresses for quick access when creating routes.</CardDescription>
+            <CardDescription>
+              Save frequently used addresses for quick access when creating routes.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleAddPlace} className="flex flex-col gap-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  placeholder="Place name (e.g., Home, Office)"
-                  value={placeName}
-                  onChange={(e) => setPlaceName(e.target.value)}
-                  required
-                />
-                <AddressInput
-                  placeholder="Search for an address"
-                  onSelect={(place) => setSelectedFeature(place)}
-                />
-              </div>
-              <div className="flex justify-end">
-                <Button 
-                  type="submit" 
-                  disabled={!selectedFeature || !placeName || isAdding}
-                >
-                  {isAdding ? (
-                    <>Loading...</>
-                  ) : (
-                    <>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Place
-                    </>
-                  )}
-                </Button>
-              </div>
-            </form>
+            <AddressInput
+              onAddressSelect={setSelectedFeature}
+              placeAddress={placeAddress}
+              onPlaceAddressChange={setPlaceAddress}
+              placeName={placeName}
+              onPlaceNameChange={setPlaceName}
+              onSubmit={handleAddPlace}
+              isLoading={isAdding}
+              disabled={!selectedFeature || !placeName || isAdding}
+            />
           </CardContent>
         </Card>
       </div>

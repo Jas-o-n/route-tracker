@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { places } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import {
   placeSchema,
   placeModelSchema,
@@ -8,7 +8,9 @@ import {
   type Place,
   type PlaceModel,
   type SearchBoxFeature,
+  type Coordinates,
 } from "@/lib/schemas/places";
+import { MapboxService } from "@/lib/services/mapbox-service";
 
 function convertToPlace(model: PlaceModel): Place {
   const place = {
@@ -20,6 +22,9 @@ function convertToPlace(model: PlaceModel): Place {
     region: model.region || undefined,
     postcode: model.postcode || undefined,
     country: model.country || undefined,
+    // Convert string decimals to numbers
+    latitude: parseFloat(model.latitude.toString()),
+    longitude: parseFloat(model.longitude.toString()),
     createdAt: model.createdAt.toISOString(),
     updatedAt: model.updatedAt.toISOString(),
   };
@@ -28,37 +33,42 @@ function convertToPlace(model: PlaceModel): Place {
 }
 
 export async function getPlaces(): Promise<Place[]> {
+  // Cast the result to handle decimal string conversion
   const result = await db.query.places.findMany({
     orderBy: (places, { asc }) => [asc(places.name)],
-  }) as PlaceModel[];
+  }) as any as PlaceModel[];
 
   return result.map(convertToPlace);
 }
 
 export async function addPlace(feature: SearchBoxFeature): Promise<Place> {
-  // Extract coordinates from the correct location in the response
-  const coordinates = feature.context?.coordinates || {
-    latitude: feature.context?.center ? Number(feature.context.center[1]) : 0,
-    longitude: feature.context?.center ? Number(feature.context.center[0]) : 0
-  };
+  const mapboxService = new MapboxService();
+  
+  // Extract coordinates using the service
+  const coordinates = mapboxService.extractCoordinates(feature);
+  
+  // Extract address components using the service
+  const addressComponents = mapboxService.extractAddressComponents(feature);
 
   const placeData = {
-    name: feature.name,
-    full_address: feature.full_address,
-    addressLine1: feature.address || null,
-    addressLine2: null,
-    city: feature.context.place.name || null,
-    region: feature.context.region.name || null,
-    postcode: feature.context.postcode.name || null,
-    country: feature.context.country.name || null,
-    latitude: coordinates.latitude.toString(),
-    longitude: coordinates.longitude.toString(),
+    name: addressComponents.name,
+    full_address: addressComponents.address,
+    addressLine1: addressComponents.addressLine1 || null,
+    addressLine2: addressComponents.addressLine2 || null,
+    city: addressComponents.city || null,
+    region: addressComponents.region || null,
+    postcode: addressComponents.postcode || null,
+    country: addressComponents.country || null,
+    // Convert numbers to SQL decimal literals
+    latitude: sql`${coordinates.latitude}::decimal(10,7)`,
+    longitude: sql`${coordinates.longitude}::decimal(10,7)`,
     userID: 'default-user',
   };
 
+  // Cast the result to handle decimal string conversion
   const [newPlace] = await db.insert(places)
     .values(placeData)
-    .returning();
+    .returning() as any as PlaceModel[];
 
   return convertToPlace(newPlace);
 }

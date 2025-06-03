@@ -16,5 +16,13 @@ Client suggestions:
 -[] for vehicle private or work
 -[] for vehicle auto fill in mileage
 
+fix:
+
+-[ ] properly get coords
+-[ ] clear input field
+
+-[ ] ts errors
+
+-[ ] remove old address input stuff
 
 
