@@ -49,8 +49,9 @@ export class MapboxService {
       searchParams.append(key, value);
     });
 
-    // Add required parameters
-    searchParams.append('access_token', MAPBOX_TOKEN!);
+// Add required parameters
+searchParams.append('access_token', MAPBOX_TOKEN!);
+searchParams.append('session_token', this.sessionToken);
 
     return `https://api.mapbox.com/geocoding/v5/mapbox.places/${endpoint}.json?${searchParams.toString()}`;
   }
@@ -85,10 +86,7 @@ export class MapboxService {
 
       const res = await fetch(url, { 
         signal,
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'RouteTracker/1.0'
-        }
+        headers: { 'Accept': 'application/json' }
       });
         if (!res.ok) {
         const errorText = await res.text();

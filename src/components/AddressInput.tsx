@@ -234,7 +234,9 @@ export default function AddressInput({
               satelliteToggle: true,
               canAdjustMarker: true,
               footer: true,
-              accessToken: process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '',
+              accessToken: process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? (() => {
+                throw new Error('Missing NEXT_PUBLIC_MAPBOX_TOKEN');
+ })(),
             }}
           />
         </div>
