@@ -1,21 +1,16 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
-import type { AddressMinimapProps } from '@mapbox/search-js-react';
+import { useState, useEffect, Suspense, useRef } from 'react';
+import AddressMinimap from '@/components/AddressMinimapLoader';
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { MapPin, Loader2, Plus, Search } from "lucide-react";
 import { Button } from "./ui/button";
 import { SearchBoxFeature } from "@/lib/schemas/places";
 import { useAddressSearch, useRetrievePlace, formatAddress } from '@/hooks/useMapbox';
-import type { Feature, Point, GeoJsonProperties } from 'geojson';
-
-// Dynamic import with proper typing
-const AddressMinimap = dynamic<any>(
-  () => import('@mapbox/search-js-react').then((mod) => mod.AddressMinimap),
-  { ssr: false }
-);
+import { convertToGeoJSONFeature } from '@/lib/utils';
+import SuggestionList from '@/components/SuggestionList';
+import { useOutsideClick } from '@/hooks/useOutsideClick';
 
 interface AddressInputProps {
   onAddressSelect: (address: SearchBoxFeature) => void;
@@ -26,22 +21,6 @@ interface AddressInputProps {
   onSubmit: (e: React.FormEvent) => void;
   isLoading: boolean;
   disabled: boolean;
-}
-
-// Convert SearchBoxFeature to GeoJSON Feature
-function convertToGeoJSONFeature(feature: SearchBoxFeature): Feature<Point, GeoJsonProperties> {
-  return {
-    type: "Feature",
-    geometry: {
-      type: "Point",
-      coordinates: feature.center,
-    },
-    properties: {
-      ...feature.properties,
-      mapboxId: feature.mapbox_id,
-      placeName: feature.place_name,
-    },
-  };
 }
 
 export default function AddressInput({
@@ -70,6 +49,8 @@ export default function AddressInput({
     error: retrieveError
   } = useRetrievePlace(selectedId);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
   // Reset active index when suggestions change
   useEffect(() => {
     setActiveIndex(-1);
@@ -96,48 +77,14 @@ export default function AddressInput({
       console.error('Invalid suggestion selected:', suggestion);
       return;
     }
-    setSelectedId(suggestion.id);
+    setMinimapFeature(suggestion);
+    onAddressSelect(suggestion);
+    onPlaceAddressChange(suggestion.properties.name || suggestion.place_name);
+    setIsSuggestionsOpen(false);
+    setSelectedId(null);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!isSuggestionsOpen || suggestions.length === 0) return;
-
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setActiveIndex(prev => 
-          prev < suggestions.length - 1 ? prev + 1 : prev
-        );
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setActiveIndex(prev => prev > 0 ? prev - 1 : -1);
-        break;
-      case 'Enter':
-        e.preventDefault();
-        if (activeIndex >= 0 && activeIndex < suggestions.length) {
-          handleSelectSuggestion(suggestions[activeIndex]);
-        }
-        break;
-      case 'Escape':
-        e.preventDefault();
-        setIsSuggestionsOpen(false);
-        break;
-    }
-  };
-
-  // Close suggestions when clicking outside
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest('.address-input-container')) {
-        setIsSuggestionsOpen(false);
-      }
-    };
-
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
-  }, []);
+  useOutsideClick(containerRef, () => setIsSuggestionsOpen(false));
 
   return (
     <form onSubmit={onSubmit} className="space-y-4" autoComplete="off">
@@ -153,7 +100,7 @@ export default function AddressInput({
         />
       </div>
 
-      <div className="space-y-2 address-input-container">
+      <div ref={containerRef} className="space-y-2 address-input-container">
         <Label htmlFor="place-address">Address</Label>
         <div className="relative">
           <Input
@@ -161,7 +108,6 @@ export default function AddressInput({
             placeholder="Search for an address"
             value={placeAddress}
             onChange={(e) => handleAddressChange(e.target.value)}
-            onKeyDown={handleKeyDown}
             disabled={isLoading}
             onFocus={() => setIsSuggestionsOpen(true)}
             className={searchError ? 'border-destructive' : ''}
@@ -177,54 +123,15 @@ export default function AddressInput({
           )}
           
           {isSuggestionsOpen && placeAddress.length >= 3 && (
-            <div 
-              id="address-suggestions"
-              className="absolute w-full mt-1 bg-popover border rounded-md shadow-md z-50 py-1"
-              role="listbox"
-            >
-              {searchError ? (
-                <div className="px-4 py-3 text-sm text-destructive">
-                  Error loading suggestions. Please try again.
-                </div>
-              ) : suggestions.length === 0 ? (
-                <div className="px-4 py-3 text-sm text-muted-foreground">
-                  {isSearching ? 'Loading suggestions...' : 'No matching addresses found'}
-                </div>
-              ) : (
-                suggestions.map((suggestion, index) => {
-                  try {
-                    const { mainText, secondaryText } = formatAddress(suggestion);
-                    return (
-                        <button
-                          key={suggestion.id}
-                          id={`suggestion-${index}`}
-                          type="button"
-                          role="option"
-                          aria-selected={index === activeIndex}
-                          className={`w-full px-4 py-3 text-left flex items-start gap-3 ${
-                          index === activeIndex ? 'bg-accent' : 'hover:bg-accent/50'
-                          }`}
-                          onClick={() => handleSelectSuggestion(suggestion)}
-                          onMouseEnter={() => setActiveIndex(index)}
-                        >
-                          <MapPin className="mt-1 h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                          <div className="flex flex-col gap-0.5">
-                          <span className="font-medium text-sm">{mainText}</span>
-                          <span className="text-xs text-muted-foreground">{secondaryText}</span>
-                          </div>
-                        </button>
-                    );
-                  } catch (error) {
-                    console.error('Error rendering suggestion:', error);
-                    return null;
-                  }
-                }).filter(Boolean)
-              )}
-            </div>
+            <SuggestionList
+              suggestions={suggestions}
+              activeIndex={activeIndex}
+              onSelect={handleSelectSuggestion}
+              onHover={setActiveIndex}
+            />
           )}
         </div>
       </div>
-
       {minimapFeature && (
         <div className="h-[180px] w-full relative mt-4 rounded-md overflow-hidden bg-secondary">
           <AddressMinimap
@@ -241,7 +148,6 @@ export default function AddressInput({
           />
         </div>
       )}
-
       <div className="flex justify-end">
         <Button 
           type="submit" 
