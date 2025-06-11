@@ -7,7 +7,7 @@ import { Input } from "./ui/input";
 import { MapPin, Loader2, Plus, Search } from "lucide-react";
 import { Button } from "./ui/button";
 import { SearchBoxFeature } from "@/lib/schemas/places";
-import { useAddressSearch, useRetrievePlace, formatAddress } from '@/hooks/useMapbox';
+import { useAddressSearch, formatAddress } from '@/hooks/useMapbox';
 import { convertToGeoJSONFeature } from '@/lib/utils';
 import SuggestionList from '@/components/SuggestionList';
 import { useOutsideClick } from '@/hooks/useOutsideClick';
@@ -34,7 +34,6 @@ export default function AddressInput({
   disabled
 }: AddressInputProps) {
   const [minimapFeature, setMinimapFeature] = useState<SearchBoxFeature | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
 
@@ -43,11 +42,6 @@ export default function AddressInput({
     isLoading: isSearching,
     error: searchError
   } = useAddressSearch(placeAddress);
-  
-  const {
-    data: placeDetails,
-    error: retrieveError
-  } = useRetrievePlace(selectedId);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -57,14 +51,12 @@ export default function AddressInput({
   }, [suggestions]);
 
   useEffect(() => {
-    if (placeDetails) {
-      setMinimapFeature(placeDetails);
-      onAddressSelect(placeDetails);
-      onPlaceAddressChange(placeDetails.properties.name || placeDetails.place_name);
+    if (minimapFeature) {
+      onAddressSelect(minimapFeature);
+      onPlaceAddressChange(minimapFeature.properties.name || minimapFeature.place_name);
       setIsSuggestionsOpen(false);
-      setSelectedId(null);
     }
-  }, [placeDetails, onAddressSelect, onPlaceAddressChange]);
+  }, [minimapFeature, onAddressSelect, onPlaceAddressChange]);
 
   const handleAddressChange = (value: string) => {
     onPlaceAddressChange(value);
@@ -81,7 +73,6 @@ export default function AddressInput({
     onAddressSelect(suggestion);
     onPlaceAddressChange(suggestion.properties.name || suggestion.place_name);
     setIsSuggestionsOpen(false);
-    setSelectedId(null);
   };
 
   useOutsideClick(containerRef, () => setIsSuggestionsOpen(false));
@@ -113,8 +104,6 @@ export default function AddressInput({
             className={searchError ? 'border-destructive' : ''}
             aria-expanded={isSuggestionsOpen}
             aria-controls={isSuggestionsOpen ? 'address-suggestions' : undefined}
-            aria-activedescendant={activeIndex >= 0 ? `suggestion-${activeIndex}` : undefined}
-            role="combobox"
           />
           {isSearching ? (
             <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground animate-spin" />
