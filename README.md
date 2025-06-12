@@ -1,28 +1,12 @@
 Todo:
 
--[x] save places
-    -[x] ability to choose from places when adding a route
-    -[x] display place address in route details
--[x] address autocomplete
-    -[] geolocation for better suggestions
-    -[] store location cords
--[] view route map
--[] export routes on certain dates to csv
+-[ ] Home page Driving Summary stats fix
+-[ ] convert everything to km (maybe km/miles based on location)
+-[ ] autofill start mileage
+-[ ] route details edit/delete button fix
+-[ ] route map map display
+-[ ] minor ui fixes (places searchbar after deleting something, some icons not aligned properly, route details route map size)
 
+Potential:
 
-Client suggestions:
--[] mileage deduct from route distance for non vehicle
--[] checkmark for vehicle or not
--[] for vehicle private or work
--[] for vehicle auto fill in mileage
-
-fix:
-
--[ ] properly get coords
--[ ] clear input field
-
--[ ] ts errors
-
--[ ] remove old address input stuff
-
-
+-[ ] ip based geolocation for better reccomendations

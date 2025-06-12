@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/utils";
 import { DeleteButton } from "@/components/DeleteButton";
 import { useRoutes } from "@/hooks/useRoutes";
+import { usePlaces } from "@/hooks/usePlaces";
 
 interface RoutesListProps {
   searchQuery: string;
@@ -16,16 +17,19 @@ interface RoutesListProps {
 }
 
 export default function RoutesList({ searchQuery, sortBy }: RoutesListProps) {
-  const { routes: { data: routes, isLoading }, deleteRoute, deletingId } = useRoutes();
+  const { routes, isLoading, deleteRoute, isDeleting } = useRoutes();
+  const { places } = usePlaces();
 
   // Filter and sort routes
-  const filteredRoutes = (routes || [])
+  const filteredRoutes = routes
     .filter((route) => {
       if (!searchQuery) return true;
       const search = searchQuery.toLowerCase();
+      const fromPlace = places.find((p) => p.id === route.fromPlaceId);
+      const toPlace = places.find((p) => p.id === route.toPlaceId);
       return (
-        route.startLocation.toLowerCase().includes(search) ||
-        route.destination.toLowerCase().includes(search) ||
+        fromPlace?.name.toLowerCase().includes(search) ||
+        toPlace?.name.toLowerCase().includes(search) ||
         (route.notes && route.notes.toLowerCase().includes(search))
       );
     })
@@ -36,9 +40,13 @@ export default function RoutesList({ searchQuery, sortBy }: RoutesListProps) {
         case "date-asc":
           return new Date(a.date).getTime() - new Date(b.date).getTime();
         case "miles-desc":
-          return b.mileage - a.mileage;
+          return (
+            b.endMileage - b.startMileage - (a.endMileage - a.startMileage)
+          );
         case "miles-asc":
-          return a.mileage - b.mileage;
+          return (
+            a.endMileage - a.startMileage - (b.endMileage - b.startMileage)
+          );
         default:
           return new Date(b.date).getTime() - new Date(a.date).getTime();
       }
@@ -73,10 +81,14 @@ export default function RoutesList({ searchQuery, sortBy }: RoutesListProps) {
     return (
       <Card className="p-6 text-center">
         {searchQuery ? (
-          <p className="text-muted-foreground">No routes match your search criteria.</p>
+          <p className="text-muted-foreground">
+            No routes match your search criteria.
+          </p>
         ) : (
           <>
-            <p className="text-muted-foreground mb-4">You haven't added any routes yet.</p>
+            <p className="text-muted-foreground mb-4">
+              You haven't added any routes yet.
+            </p>
             <Button asChild>
               <Link href="/routes/new">Add Your First Route</Link>
             </Button>
@@ -88,60 +100,64 @@ export default function RoutesList({ searchQuery, sortBy }: RoutesListProps) {
 
   return (
     <div className="space-y-4">
-      {filteredRoutes.map((route) => (
-        <Card key={route.id} className="group hover:shadow-md transition-shadow">
-          <CardContent className="p-4 md:p-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between md:justify-start">
-                  <div className="flex items-center">
-                    <Badge variant="outline" className="mr-2">
-                      {route.mileage} miles
-                    </Badge>
-                  </div>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    {formatDate(route.date)}
-                  </div>
-                </div>
+      {filteredRoutes.map((route) => {
+        const fromPlace = places.find((p) => p.id === route.fromPlaceId);
+        const toPlace = places.find((p) => p.id === route.toPlaceId);
+        const mileage = route.endMileage - route.startMileage;
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
-                  <div className="flex items-start">
-                    <MapPin className="h-4 w-4 mr-2 text-muted-foreground shrink-0 mt-0.5" />
-                    <div>
-                      <div className="text-xs text-muted-foreground">From</div>
-                      <div className="font-medium">{route.startLocation}</div>
+        return (
+          <Card
+            key={route.id}
+            className="group hover:shadow-md transition-shadow"
+          >
+            <CardContent className="p-4 md:p-6">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between md:justify-start">
+                    <div className="flex items-center">
+                      <Badge variant="outline" className="mr-2">
+                        {mileage} miles
+                      </Badge>
+                    </div>
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Calendar className="h-3 w-3 mr-1" />
+                      {formatDate(route.date)}
                     </div>
                   </div>
 
-                  <div className="flex items-start">
-                    <MapPin className="h-4 w-4 mr-2 text-primary shrink-0 mt-0.5" />
-                    <div>
-                      <div className="text-xs text-muted-foreground">To</div>
-                      <div className="font-medium">{route.destination}</div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
+                    <div className="flex items-start">
+                      <MapPin className="h-4 w-4 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+                      <div>
+                        <div className="text-xs text-muted-foreground">From</div>
+                        <div className="font-medium">{fromPlace?.name}</div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start">
+                      <MapPin className="h-4 w-4 mr-2 text-primary shrink-0 mt-0.5" />
+                      <div>
+                        <div className="text-xs text-muted-foreground">To</div>
+                        <div className="font-medium">{toPlace?.name}</div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="mt-4 md:mt-0 md:ml-4 flex justify-end space-x-2">
-                <div>
+
+                <div className="mt-4 md:mt-0 flex items-center justify-between md:space-x-2">
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href={`/routes/${route.id}`}>View Details</Link>
+                  </Button>
                   <DeleteButton
                     onDelete={() => deleteRoute(route.id)}
-                    isDeleting={deletingId === route.id}
-                    size="sm"
+                    isDeleting={isDeleting}
                   />
                 </div>
-                <Button asChild variant="outline" size="sm" className="hover:bg-primary/5">
-                  <Link href={`/routes/${route.id}`} className="group/button">
-                    View Details
-                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/button:translate-x-1" />
-                  </Link>
-                </Button>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }

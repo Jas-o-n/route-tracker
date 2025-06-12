@@ -5,7 +5,6 @@ import Link from "next/link";
 import { ArrowLeft, Calendar, Edit, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import RouteMap from "@/components/RouteMap";
@@ -13,14 +12,33 @@ import { usePlaces } from "@/hooks/usePlaces";
 import { DeleteButton } from "@/components/DeleteButton";
 import { useRoute, useRoutes } from "@/hooks/useRoutes";
 
+function formatMileage(value: number | undefined | null): string {
+  if (typeof value !== 'number' || isNaN(value)) {
+    return '0';
+  }
+  return value.toLocaleString();
+}
+
 export default function RouteDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const { places } = usePlaces();
-  
-  const { data: route, isLoading, isError } = useRoute(id);
+  const { places, isLoading: placesLoading } = usePlaces();
+  const { data: route, isLoading: routeLoading, isError } = useRoute(id);
   const { deleteRoute, isDeleting } = useRoutes();
+
+  console.log('Route details:', {
+    id,
+    route,
+    routeData: route ? {
+      fromPlaceId: route.fromPlaceId,
+      toPlaceId: route.toPlaceId,
+      startMileage: route.startMileage,
+      endMileage: route.endMileage,
+      stats: route.stats
+    } : null,
+    places: places.map(p => ({ id: p.id, name: p.name }))
+  });
 
   const handleDeleteRoute = async () => {
     await deleteRoute(id, {
@@ -29,8 +47,8 @@ export default function RouteDetailPage() {
       }
     });
   };
-
-  if (isLoading) {
+  
+  if (routeLoading || placesLoading) {
     return (
       <div className="container mx-auto max-w-3xl py-8 px-4 md:px-6 flex justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -52,135 +70,137 @@ export default function RouteDetailPage() {
     );
   }
 
+  const fromPlace = places.find(p => p.id === route.fromPlaceId);
+  const toPlace = places.find(p => p.id === route.toPlaceId);
+  const mileage = route.endMileage - route.startMileage;
+
   return (
-    <main className="container mx-auto max-w-4xl py-8 px-4 md:px-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-        <div className="flex items-center">
-          <Button variant="ghost" size="icon" asChild className="mr-4">
+    <div className="container mx-auto max-w-7xl py-8 px-4 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" asChild className="shrink-0">
             <Link href="/routes">
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Route Details</h1>
+          <h1 className="text-2xl font-semibold">Route Details</h1>
         </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/routes/${id}/edit`}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </Link>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" asChild>
+            <Link href={`/routes/${route.id}/edit`}>Edit</Link>
           </Button>
-          <DeleteButton
-            onDelete={handleDeleteRoute}
-            isDeleting={isDeleting}
-            showText={true}
-            size="sm"
+          <DeleteButton 
+            onConfirm={handleDeleteRoute} 
+            isLoading={isDeleting}
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
+      {/* Main Content - Updated Grid Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Column - Route Info and Stats */}
+        <div className="space-y-6">
+          {/* Route Information */}
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle>Route Map</CardTitle>
+            <CardHeader>
+              <CardTitle>Route Information</CardTitle>
             </CardHeader>
-            <CardContent>
-              <RouteMap route={route} />
+            <CardContent className="space-y-4">
+              <div className="flex items-start gap-2">
+                <Calendar className="h-4 w-4 mt-1 text-muted-foreground shrink-0" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Date</p>
+                  <p className="font-medium">{formatDate(route.date)}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2">
+                <MapPin className="h-4 w-4 mt-1 text-muted-foreground shrink-0" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Start Location</p>
+                  <p className="font-medium">{fromPlace?.name}</p>
+                  <p className="text-sm text-muted-foreground">{fromPlace?.full_address}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2">
+                <MapPin className="h-4 w-4 mt-1 text-muted-foreground shrink-0" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Destination</p>
+                  <p className="font-medium">{toPlace?.name}</p>
+                  <p className="text-sm text-muted-foreground">{toPlace?.full_address}</p>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t">
+                <p className="text-sm text-muted-foreground mb-2">Mileage</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Start</p>
+                    <p className="font-medium">{formatMileage(route.startMileage)} miles</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">End</p>
+                    <p className="font-medium">{formatMileage(route.endMileage)} miles</p>
+                  </div>
+                </div>
+                <div className="mt-2">
+                  <Badge variant="secondary">
+                    {formatMileage(mileage)} miles total
+                  </Badge>
+                </div>
+              </div>
+
+              {route.notes && (
+                <div className="pt-4 border-t">
+                  <p className="text-sm text-muted-foreground mb-2">Notes</p>
+                  <p>{route.notes}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Statistics */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Statistics</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between items-center">
+                <p className="text-muted-foreground">Times Driven</p>
+                <p className="font-medium">{route.stats.timesDriven}</p>
+              </div>
+              <div className="flex justify-between items-center">
+                <p className="text-muted-foreground">Average Mileage</p>
+                <p className="font-medium">{formatMileage(route.stats.avgMileage)} miles</p>
+              </div>
+              <div className="flex justify-between items-center">
+                <p className="text-muted-foreground">Last Driven</p>
+                <p className="font-medium">{formatDate(route.stats.lastDriven)}</p>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        <div>
+        {/* Right Column - Map */}
+        <div className="lg:flex lg:flex-col">
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle>Route Information</CardTitle>
+            <CardHeader>
+              <CardTitle>Route Map</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-1">Date</h3>
-                  <div className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span>{formatDate(route.date)}</span>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-1">Start Location</h3>
-                  <div className="flex items-start">
-                    <MapPin className="h-4 w-4 mr-2 mt-1 text-muted-foreground shrink-0" />
-                    <div>
-                      <span className="font-medium">{route.startLocation}</span>
-                      <p className="text-sm text-muted-foreground">
-                        {places.find(p => p.name === route.startLocation)?.address}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-1">Destination</h3>
-                  <div className="flex items-start">
-                    <MapPin className="h-4 w-4 mr-2 mt-1 text-muted-foreground shrink-0" />
-                    <div>
-                      <span className="font-medium">{route.destination}</span>
-                      <p className="text-sm text-muted-foreground">
-                        {places.find(p => p.name === route.destination)?.address}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-1">Mileage</h3>
-                  <div className="flex items-center">
-                    <Badge variant="outline" className="text-base font-medium">
-                      {route.mileage} miles
-                    </Badge>
-                  </div>
-                </div>
-
-                {route.notes && (
-                  <>
-                    <Separator />
-                    <div>
-                      <h3 className="text-sm font-medium text-muted-foreground mb-1">Notes</h3>
-                      <p className="text-sm">{route.notes}</p>
-                    </div>
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="mt-6">
-            <CardHeader className="pb-3">
-              <CardTitle>Statistics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Times Driven</span>
-                  <span className="font-medium">{route.stats?.timesDriven || 1}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Average Mileage</span>
-                  <span className="font-medium">{route.stats?.avgMileage || route.mileage} miles</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Last Driven</span>
-                  <span className="font-medium">{formatDate(route.date)}</span>
-                </div>
+            <CardContent className="p-0">
+              <div className="h-[400px]">
+                <RouteMap 
+                  fromPlace={fromPlace} 
+                  toPlace={toPlace} 
+                  mileage={mileage}
+                />
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

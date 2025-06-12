@@ -10,20 +10,22 @@ import {
 } from "@/lib/schemas/routes";
 import { db } from "@/lib/db";
 import { routes } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 
 function convertToRoute(model: RouteModel): Route {
-  // Validate the model first
-  const validatedModel = routeModelSchema.parse(model);
-  
-  const route = {
-    ...validatedModel,
-    date: validatedModel.date.toISOString(),
-    createdAt: validatedModel.createdAt.toISOString(),
-    updatedAt: validatedModel.updatedAt.toISOString(),
+  return {
+    id: model.id,
+    fromPlaceId: model.fromPlaceId,
+    toPlaceId: model.toPlaceId,
+    startMileage: model.startMileage,
+    endMileage: model.endMileage,
+    distance: model.distance,
+    date: model.date.toISOString(),
+    notes: model.notes,
+    userID: model.userID,
+    createdAt: model.createdAt.toISOString(),
+    updatedAt: model.updatedAt.toISOString(),
   };
-  
-  return routeSchema.parse(route);
 }
 
 export async function getRecentRoutes(limit = 3): Promise<Route[]> {
@@ -45,70 +47,102 @@ export async function getAllRoutes(): Promise<Route[]> {
 
 export async function getRouteById(id: string): Promise<RouteWithStats | null> {
   const route = await db.query.routes.findFirst({
-    where: eq(routes.id, id),
+    where: (routes, { eq }) => eq(routes.id, id),
   });
-  
-  if (!route) {
-    return null;
-  }
+
+  if (!route) return null;
 
   const validatedRoute = routeModelSchema.parse(route);
   
   const similarRoutes = await db.query.routes.findMany({
     where: (routes, { and, eq }) => and(
-      eq(routes.startLocation, validatedRoute.startLocation),
-      eq(routes.destination, validatedRoute.destination)
+      eq(routes.fromPlaceId, validatedRoute.fromPlaceId),
+      eq(routes.toPlaceId, validatedRoute.toPlaceId)
     ),
   });
 
   const validatedSimilarRoutes = similarRoutes.map(r => routeModelSchema.parse(r));
+  const allRoutes = [validatedRoute, ...validatedSimilarRoutes];
   
-  const stats = {
-    timesDriven: validatedSimilarRoutes.length,
-    avgMileage: validatedSimilarRoutes.reduce((sum, r) => sum + r.mileage, 0) / validatedSimilarRoutes.length,
-    lastDriven: validatedSimilarRoutes
-      .sort((a, b) => b.date.getTime() - a.date.getTime())[0]
-      .date.toISOString(),
+  // Convert base route data
+  const baseRoute = {
+    id: validatedRoute.id,
+    fromPlaceId: validatedRoute.fromPlaceId,
+    toPlaceId: validatedRoute.toPlaceId,
+    startMileage: validatedRoute.startMileage,
+    endMileage: validatedRoute.endMileage,
+    distance: validatedRoute.endMileage - validatedRoute.startMileage,
+    date: validatedRoute.date.toISOString(),
+    notes: validatedRoute.notes,
+    userID: validatedRoute.userID,
+    createdAt: validatedRoute.createdAt.toISOString(),
+    updatedAt: validatedRoute.updatedAt.toISOString(),
   };
-  
-  return routeWithStatsSchema.parse({
-    ...convertToRoute(validatedRoute),
-    stats,
-  });
+
+  // Add stats
+  const routeWithStats = {
+    ...baseRoute,
+    stats: {
+      timesDriven: allRoutes.length,
+      avgMileage: allRoutes.reduce((sum, r) => sum + (r.endMileage - r.startMileage), 0) / allRoutes.length,
+      lastDriven: validatedRoute.date.toISOString(),
+    },
+  };
+
+  // Validate the final object
+  return routeWithStatsSchema.parse(routeWithStats);
 }
 
-export async function addRoute(data: RouteFormData): Promise<Route> {
-  // Validate input
+export async function createRoute(data: RouteFormData): Promise<Route> {
+  // Validate the form data
   const validatedData = routeFormSchema.parse(data);
+  
+  // Calculate distance
+  const distance = validatedData.endMileage - validatedData.startMileage;
 
   const [newRoute] = await db.insert(routes)
     .values({
-      startLocation: validatedData.startLocation,
-      destination: validatedData.destination,
-      mileage: validatedData.mileage,
+      fromPlaceId: validatedData.fromPlaceId,
+      toPlaceId: validatedData.toPlaceId,
+      startMileage: validatedData.startMileage,
+      endMileage: validatedData.endMileage,
+      distance,
       date: new Date(validatedData.date),
-      notes: validatedData.notes ?? null,
-      userID: 'default-user',
+      notes: validatedData.notes,
+      userID: 'default-user', // TODO: Replace with actual user ID
     })
     .returning();
-  
-  return convertToRoute(newRoute);
+
+  return convertToRoute(routeModelSchema.parse(newRoute));
 }
 
-export async function updateRoute(id: string, data: Partial<RouteFormData>): Promise<Route | null> {
-  // Partial validation of input
-  const validatedData = routeFormSchema.partial().parse(data);
+export async function updateRoute(id: string, data: Partial<RouteFormData>): Promise<Route> {
+  const existingRoute = await db.query.routes.findFirst({
+    where: eq(routes.id, id),
+  });
+
+  if (!existingRoute) {
+    throw new Error('Route not found');
+  }
+
+  // Prepare update data
+  const updateData: Partial<RouteModel> = {
+    ...data,
+    // Convert date string to Date object if present
+    ...(data.date && { date: new Date(data.date) }),
+  };
+
+  // If both mileages are provided, recalculate distance
+  if (data.startMileage !== undefined && data.endMileage !== undefined) {
+    updateData.distance = data.endMileage - data.startMileage;
+  }
 
   const [updatedRoute] = await db.update(routes)
-    .set({
-      ...validatedData,
-      date: validatedData.date ? new Date(validatedData.date) : undefined,
-      updatedAt: new Date(),
-    })
+    .set(updateData)
     .where(eq(routes.id, id))
     .returning();
-    
-  return updatedRoute ? convertToRoute(updatedRoute) : null;
+
+  return convertToRoute(routeModelSchema.parse(updatedRoute));
 }
 
 export async function deleteRoute(id: string): Promise<boolean> {

@@ -1,9 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as routeActions from '@/lib/actions/route-actions';
-import { Route, RouteFormData, RouteWithStats, UpdateRouteInput } from '@/lib/schemas/routes';
+import type { Route, RouteFormData, RouteWithStats, RouteModel } from '@/lib/schemas/routes';
 
 interface DeleteOptions {
   onSuccess?: () => void;
+  onError?: (error: Error) => void;
+}
+
+interface AddOptions {
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
 }
 
 export function useRoutes() {
@@ -24,7 +30,9 @@ export function useRoutes() {
   });
 
   return {
-    routes,
+    routes: routes.data ?? [],
+    isLoading: routes.isLoading,
+    isError: routes.isError,
     deleteRoute: async (id: string, options?: DeleteOptions) => {
       await deleteRouteMutation.mutateAsync(id, { onSuccess: options?.onSuccess });
     },
@@ -33,10 +41,43 @@ export function useRoutes() {
   };
 }
 
+export function useAddRoute() {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (data: RouteFormData) => routeActions.createRoute(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['routes'] });
+      queryClient.invalidateQueries({ queryKey: ['routeStats'] });
+    },
+  });
+
+  return {
+    addRoute: async (data: RouteFormData, options?: AddOptions) => {
+      try {
+        await mutation.mutateAsync(data);
+        options?.onSuccess?.();
+      } catch (error) {
+        options?.onError?.(error instanceof Error ? error : new Error('Failed to add route'));
+        throw error;
+      }
+    },
+    isAdding: mutation.isPending,
+  };
+}
+
 export function useRoute(id: string) {
-  return useQuery<RouteWithStats | null>({
+  return useQuery({
     queryKey: ['route', id],
     queryFn: () => routeActions.getRouteById(id),
+    enabled: !!id,
+  });
+}
+
+export function useRecentRoutes() {
+  return useQuery<Route[]>({
+    queryKey: ['routes', 'recent'],
+    queryFn: () => routeActions.getRecentRoutes(),
   });
 }
 
@@ -46,52 +87,4 @@ export function useRouteStats() {
     queryFn: routeActions.getRouteStats,
     staleTime: 5 * 60 * 1000, // Consider stats stale after 5 minutes
   });
-}
-
-export function useRecentRoutes() {
-  return useQuery({
-    queryKey: ['recentRoutes'],
-    queryFn: () => routeActions.getRecentRoutes(),
-    staleTime: 30 * 1000, // Consider recent routes stale after 30 seconds
-  });
-}
-
-export function useEditRoute(id: string) {
-  const queryClient = useQueryClient();
-
-  const editMutation = useMutation({
-    mutationFn: (data: UpdateRouteInput) => routeActions.updateRoute(id, data),
-    onSuccess: (updatedRoute) => {
-      // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ['routes'] });
-      queryClient.invalidateQueries({ queryKey: ['route', id] });
-      
-      // Update route in cache immediately
-      queryClient.setQueryData(['route', id], updatedRoute);
-    },
-  });
-
-  return {
-    updateRoute: editMutation.mutate,
-    isUpdating: editMutation.isPending,
-    error: editMutation.error,
-  };
-}
-
-export function useAddRoute() {
-  const queryClient = useQueryClient();
-  
-  const addRouteMutation = useMutation({
-    mutationFn: (data: RouteFormData) => routeActions.addRoute(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['routes'] });
-      queryClient.invalidateQueries({ queryKey: ['routeStats'] });
-    },
-  });
-
-  return {
-    addRoute: addRouteMutation.mutate,
-    isAdding: addRouteMutation.isPending,
-    error: addRouteMutation.error,
-  };
 }

@@ -7,14 +7,20 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// Format date from YYYY-MM-DD to more readable format
-export function formatDate(dateString: string): string {
-  const date = new Date(dateString);
+// Format date from ISO string or Date object to more readable format
+export function formatDate(date: string | Date | undefined | null): string {
+  if (!date) {
+    return 'No date';
+  }
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(dateObj.getTime())) {
+    return 'Invalid date';
+  }
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
-  }).format(date);
+  }).format(dateObj);
 }
 
 // Convert SearchBoxFeature to GeoJSON Feature

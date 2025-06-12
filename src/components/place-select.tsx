@@ -16,9 +16,8 @@ import { cn } from "@/lib/utils";
 import { usePlaces } from "@/hooks/usePlaces";
 
 interface PlaceSelectProps {
-  value: string;
+  value: string; // This will be the UUID
   onChange: (value: string) => void;
-  onAddressChange?: (address: string) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   placeholder?: string;
@@ -27,13 +26,12 @@ interface PlaceSelectProps {
 export function PlaceSelect({
   value,
   onChange,
-  onAddressChange,
   open,
   onOpenChange,
   placeholder = "Select place",
 }: PlaceSelectProps) {
   const { places } = usePlaces();
-  const selectedPlace = places.find(place => place.name === value);
+  const selectedPlace = places.find(place => place.id === value);
 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
@@ -46,11 +44,11 @@ export function PlaceSelect({
           <div className="flex flex-col items-start text-left">
             <div className="flex items-center">
               <MapPin className="mr-2 h-4 w-4 shrink-0" />
-              {value || placeholder}
+              {selectedPlace ? selectedPlace.name : placeholder}
             </div>
             {selectedPlace && (
               <span className="ml-6 text-sm text-muted-foreground">
-                {selectedPlace.address}
+                {selectedPlace.full_address}
               </span>
             )}
           </div>
@@ -65,10 +63,7 @@ export function PlaceSelect({
               <CommandItem
                 key={place.id}
                 onSelect={() => {
-                  onChange(place.name);
-                  if (onAddressChange) {
-                    onAddressChange(place.address);
-                  }
+                  onChange(place.id);
                   onOpenChange(false);
                 }}
               >
@@ -76,13 +71,13 @@ export function PlaceSelect({
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      value === place.name ? "opacity-100" : "opacity-0"
+                      value === place.id ? "opacity-100" : "opacity-0"
                     )}
                   />
                   <div className="flex flex-col">
                     <span>{place.name}</span>
                     <span className="text-sm text-muted-foreground">
-                      {place.address}
+                      {place.full_address}
                     </span>
                   </div>
                 </div>
