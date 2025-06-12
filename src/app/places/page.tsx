@@ -48,10 +48,7 @@ export default function PlacesPage() {
     }
 
     try {
-      await addPlace({
-        ...selectedFeature,
-        place_name: placeName,
-      });
+      await addPlace({ feature: selectedFeature, placeName });
       setSelectedFeature(null);
       setPlaceName("");
       setPlaceAddress("");

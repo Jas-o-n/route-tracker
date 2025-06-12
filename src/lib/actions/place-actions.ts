@@ -15,8 +15,9 @@ import { MapboxService } from "@/lib/services/mapbox-service";
 function convertToPlace(model: PlaceModel): Place {
   const place = {
     ...model,
-    address: model.full_address,
-    addressLine1: model.addressLine1 || undefined,
+    name: model.name, // Ensure name is the place name
+    full_address: model.full_address, // Ensure full_address is the full address
+    addressLine1: model.addressLine1 || undefined, // Ensure addressLine1 is populated correctly
     addressLine2: model.addressLine2 || undefined,
     city: model.city || undefined,
     region: model.region || undefined,
@@ -27,6 +28,9 @@ function convertToPlace(model: PlaceModel): Place {
     longitude: parseFloat(model.longitude.toString()),
     createdAt: model.createdAt.toISOString(),
     updatedAt: model.updatedAt.toISOString(),
+    address: model.full_address || '', // Ensure address is populated
+    displayName: model.name || '', // Ensure displayName is populated
+    shortAddress: model.addressLine1 || '', // Ensure shortAddress is populated
   };
 
   return placeSchema.parse(place);
@@ -41,18 +45,21 @@ export async function getPlaces(): Promise<Place[]> {
   return result.map(convertToPlace);
 }
 
-export async function addPlace(feature: SearchBoxFeature): Promise<Place> {
+export async function addPlace(
+  feature: SearchBoxFeature, 
+  placeName: string
+): Promise<Place> {
   const mapboxService = new MapboxService();
-  
+
   // Extract coordinates using the service
   const coordinates = mapboxService.extractCoordinates(feature);
-  
+
   // Extract address components using the service
   const addressComponents = mapboxService.extractAddressComponents(feature);
 
   const placeData = {
-    name: addressComponents.name,
-    full_address: addressComponents.address,
+    name: placeName, // Use the user-provided place name
+    full_address: addressComponents.address || '', // Use the full address from Mapbox
     addressLine1: addressComponents.addressLine1 || null,
     addressLine2: addressComponents.addressLine2 || null,
     city: addressComponents.city || null,

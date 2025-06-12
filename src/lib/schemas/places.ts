@@ -143,6 +143,7 @@ export interface AddressComponents {
   region?: string;
   postcode?: string;
   country?: string;
+  full_address?: string;
 }
 
 export const isValidCoordinates = (coords: Coordinates): boolean => {

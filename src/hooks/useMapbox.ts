@@ -44,10 +44,13 @@ export function useRetrievePlace(id: string | null) {
 
 export function formatAddress(feature: SearchBoxFeature): AddressDisplay {
   try {
+    // Extract components for any additional formatting needed
     const components = new MapboxService().extractAddressComponents(feature);
     return {
-      mainText: components.name || 'Unnamed Location',
-      secondaryText: components.shortAddress || components.address || '',
+      // Use feature.text for the main road name
+      mainText: feature.text || components.name || 'Unnamed Location',
+      // Use place_name for the full address
+      secondaryText: feature.place_name || components.address || '',
     };
   } catch (error) {
     console.error('Error formatting address:', error);

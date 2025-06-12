@@ -19,9 +19,9 @@ export function usePlaceMutations() {
   const queryClient = useQueryClient();
 
   const addMutation = useMutation({
-    mutationFn: (feature: SearchBoxFeature) => {
-      console.log('Mutation executing with feature:', feature);
-      return addPlace(feature);
+    mutationFn: ({ feature, placeName }: { feature: SearchBoxFeature; placeName: string }) => {
+      console.log('Mutation executing with feature:', feature, 'and name:', placeName);
+      return addPlace(feature, placeName);
     },
     onSuccess: () => {
       console.log('Mutation succeeded, invalidating queries');

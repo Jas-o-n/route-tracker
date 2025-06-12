@@ -71,7 +71,8 @@ export default function AddressInput({
     }
     setMinimapFeature(suggestion);
     onAddressSelect(suggestion);
-    onPlaceAddressChange(suggestion.properties.name || suggestion.place_name);
+    // Use the full formatted address instead of just the name
+    onPlaceAddressChange(suggestion.properties.place_formatted || suggestion.properties.full_address || suggestion.properties.description || '');
     setIsSuggestionsOpen(false);
   };
 

@@ -236,17 +236,17 @@ searchParams.append('session_token', this.sessionToken);
 
     // Build address components
     const components: AddressComponents = {
-      name: properties.name || text || place_name,  // Fallback chain for name
-      address: place_name,  // Required by schema
-      shortAddress: properties.place_formatted || place_name,
+      name: text || properties.name,  // Name of the place from text field
+      address: place_name,  // Full formatted address
+      addressLine1: text, // Street name from the text field
     };
 
-    // Add optional components only if they exist and are non-empty strings
-    if (typeof properties.address === 'string' && properties.address.trim()) {
-      components.addressLine1 = properties.address;
+    // House number from the address property
+    if (properties.address) {
+      components.addressLine2 = properties.address; // House number
     }
 
-    // Safely extract nested context properties, checking for non-empty strings
+    // Process context for address components
     if (properties.context) {
       if (context.place?.name?.trim()) {
         components.city = context.place.name;
@@ -261,6 +261,12 @@ searchParams.append('session_token', this.sessionToken);
         components.country = context.country.name;
       }
     }
+
+    // Set full_address and shortAddress
+    components.full_address = place_name;
+    components.shortAddress = [components.addressLine2, components.addressLine1]
+      .filter(Boolean)
+      .join(' ');
 
     return components;
   }
