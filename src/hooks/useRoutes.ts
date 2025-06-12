@@ -22,19 +22,23 @@ export function useRoutes() {
 
   const deleteRouteMutation = useMutation({
     mutationFn: routeActions.deleteRoute,
-    onSuccess: (_, __, context: { onSuccess?: () => void } | undefined) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['routes'] });
       queryClient.invalidateQueries({ queryKey: ['routeStats'] });
-      context?.onSuccess?.();
     },
   });
 
   return {
     routes: routes.data ?? [],
     isLoading: routes.isLoading,
-    isError: routes.isError,
-    deleteRoute: async (id: string, options?: DeleteOptions) => {
-      await deleteRouteMutation.mutateAsync(id, { onSuccess: options?.onSuccess });
+    isError: routes.isError,    deleteRoute: async (id: string, options?: DeleteOptions) => {
+      try {
+        await deleteRouteMutation.mutateAsync(id);
+        options?.onSuccess?.();
+      } catch (error) {
+        options?.onError?.(error instanceof Error ? error : new Error('Failed to delete route'));
+        throw error;
+      }
     },
     deletingId: deleteRouteMutation.isPending ? deleteRouteMutation.variables as string : null,
     isDeleting: deleteRouteMutation.isPending,

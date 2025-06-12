@@ -20,13 +20,16 @@ export default function RoutesList({ searchQuery, sortBy }: RoutesListProps) {
   const { routes, isLoading, deleteRoute, isDeleting } = useRoutes();
   const { places } = usePlaces();
 
+  // Create a Map for O(1) place lookups
+  const placesMap = new Map(places.map(place => [place.id, place]));
+
   // Filter and sort routes
   const filteredRoutes = routes
     .filter((route) => {
       if (!searchQuery) return true;
       const search = searchQuery.toLowerCase();
-      const fromPlace = places.find((p) => p.id === route.fromPlaceId);
-      const toPlace = places.find((p) => p.id === route.toPlaceId);
+      const fromPlace = placesMap.get(route.fromPlaceId);
+      const toPlace = placesMap.get(route.toPlaceId);
       return (
         fromPlace?.name.toLowerCase().includes(search) ||
         toPlace?.name.toLowerCase().includes(search) ||

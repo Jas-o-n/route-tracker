@@ -93,7 +93,7 @@ export default function RouteMap({ fromPlace, toPlace, mileage }: RouteMapProps)
     mapContainer.appendChild(mileageLabel);
     
     mapContainerRef.current.appendChild(mapContainer);
-  }, [fromPlace, toPlace]);
+  }, [fromPlace, toPlace, mileage]);
 
   if (!fromPlace || !toPlace) {
     return (

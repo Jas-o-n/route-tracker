@@ -54,12 +54,13 @@ export async function getRouteById(id: string): Promise<RouteWithStats | null> {
 
   const validatedRoute = routeModelSchema.parse(route);
   
-  const similarRoutes = await db.query.routes.findMany({
-    where: (routes, { and, eq }) => and(
-      eq(routes.fromPlaceId, validatedRoute.fromPlaceId),
-      eq(routes.toPlaceId, validatedRoute.toPlaceId)
-    ),
-  });
+const similarRoutes = await db.query.routes.findMany({
+  where: (routes, { and, eq, ne }) => and(
+    eq(routes.fromPlaceId, validatedRoute.fromPlaceId),
+    eq(routes.toPlaceId, validatedRoute.toPlaceId),
+   ne(routes.id, validatedRoute.id)
+ ),
+});
 
   const validatedSimilarRoutes = similarRoutes.map(r => routeModelSchema.parse(r));
   const allRoutes = [validatedRoute, ...validatedSimilarRoutes];
@@ -133,9 +134,11 @@ export async function updateRoute(id: string, data: Partial<RouteFormData>): Pro
   };
 
   // If both mileages are provided, recalculate distance
-  if (data.startMileage !== undefined && data.endMileage !== undefined) {
-    updateData.distance = data.endMileage - data.startMileage;
-  }
+if (data.startMileage !== undefined || data.endMileage !== undefined) {
+  const start = data.startMileage ?? existingRoute.startMileage;
+  const end   = data.endMileage   ?? existingRoute.endMileage;
+  updateData.distance = end - start;
+}
 
   const [updatedRoute] = await db.update(routes)
     .set(updateData)
@@ -155,19 +158,19 @@ export async function deleteRoute(id: string): Promise<boolean> {
 
 export async function getRouteStats(): Promise<any> {
   const allRoutes = await getAllRoutes();
-  
-  const totalRoutes = allRoutes.length;
-  const totalMiles = allRoutes.reduce((sum, route) => sum + Number(route.mileage), 0);
+  const totalMiles = allRoutes.reduce((sum, r) => sum + r.distance, 0);
+
+
   
   // Find most frequent route
   const routeCounts: Record<string, { from: string; to: string; count: number }> = {};
   
   allRoutes.forEach((route) => {
-    const key = `${route.startLocation}-${route.destination}`;
+    const key = `${route.fromPlaceId}-${route.toPlaceId}`;
     if (!routeCounts[key]) {
       routeCounts[key] = {
-        from: route.startLocation,
-        to: route.destination,
+        from: route.fromPlaceId,
+        to: route.toPlaceId,
         count: 0,
       };
     }
