@@ -263,10 +263,9 @@ searchParams.append('session_token', this.sessionToken);
     }
 
     // Set full_address and shortAddress
-    components.full_address = place_name;
-    components.shortAddress = [components.addressLine2, components.addressLine1]
-      .filter(Boolean)
-      .join(' ');
+components.shortAddress = [components.addressLine2, components.addressLine1]
+   .filter(Boolean)
+   .join(' ');
 
     return components;
   }

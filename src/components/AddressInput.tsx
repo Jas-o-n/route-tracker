@@ -72,7 +72,12 @@ export default function AddressInput({
     setMinimapFeature(suggestion);
     onAddressSelect(suggestion);
     // Use the full formatted address instead of just the name
-    onPlaceAddressChange(suggestion.properties.place_formatted || suggestion.properties.full_address || suggestion.properties.description || '');
+    onPlaceAddressChange(
+      suggestion.properties.place_formatted
+        || suggestion.properties.full_address
+        || suggestion.properties.description
+        || suggestion.place_name      // reliable final fallback
+    );
     setIsSuggestionsOpen(false);
   };
 

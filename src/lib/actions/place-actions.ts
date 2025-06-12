@@ -15,9 +15,6 @@ import { MapboxService } from "@/lib/services/mapbox-service";
 function convertToPlace(model: PlaceModel): Place {
   const place = {
     ...model,
-    name: model.name, // Ensure name is the place name
-    full_address: model.full_address, // Ensure full_address is the full address
-    addressLine1: model.addressLine1 || undefined, // Ensure addressLine1 is populated correctly
     addressLine2: model.addressLine2 || undefined,
     city: model.city || undefined,
     region: model.region || undefined,
