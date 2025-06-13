@@ -91,8 +91,8 @@ export default function RouteDetailPage() {
             <Link href={`/routes/${route.id}/edit`}>Edit</Link>
           </Button>
           <DeleteButton 
-            onConfirm={handleDeleteRoute} 
-            isLoading={isDeleting}
+            onDelete={handleDeleteRoute} 
+            isDeleting={isDeleting}
           />
         </div>
       </div>

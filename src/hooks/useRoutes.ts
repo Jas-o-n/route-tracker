@@ -12,6 +12,11 @@ interface AddOptions {
   onError?: (error: Error) => void;
 }
 
+interface UpdateOptions {
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+}
+
 export function useRoutes() {
   const queryClient = useQueryClient();
 
@@ -91,4 +96,30 @@ export function useRouteStats() {
     queryFn: routeActions.getRouteStats,
     staleTime: 5 * 60 * 1000, // Consider stats stale after 5 minutes
   });
+}
+
+export function useEditRoute(id: string) {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (data: Partial<RouteFormData>) => routeActions.updateRoute(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['routes'] });
+      queryClient.invalidateQueries({ queryKey: ['route', id] });
+      queryClient.invalidateQueries({ queryKey: ['routeStats'] });
+    },
+  });
+
+  return {
+    updateRoute: async (data: Partial<RouteFormData>, options?: UpdateOptions) => {
+      try {
+        await mutation.mutateAsync(data);
+        options?.onSuccess?.();
+      } catch (error) {
+        options?.onError?.(error instanceof Error ? error : new Error('Failed to update route'));
+        throw error;
+      }
+    },
+    isUpdating: mutation.isPending,
+  };
 }

@@ -25,18 +25,15 @@ import { useRoute, useEditRoute } from "@/hooks/useRoutes";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  startLocation: z.string().min(2, {
-    message: "Start location must be at least 2 characters.",
-  }),
-  destination: z.string().min(2, {
-    message: "Destination must be at least 2 characters.",
-  }),
-  mileage: z.coerce.number().positive({
-    message: "Mileage must be a positive number.",
-  }),
+  fromPlaceId: z.string().uuid(),
+  toPlaceId: z.string().uuid(),
+  startMileage: z.coerce.number().nonnegative(),
+  endMileage: z.coerce.number().nonnegative(),
   date: z.string(),
-  notes: z.string().optional(),
+  notes: z.string(),
 });
+
+type RouteFormData = z.infer<typeof formSchema>;
 
 export default function EditRoutePage() {
   const params = useParams();
@@ -44,7 +41,6 @@ export default function EditRoutePage() {
   const { toast } = useToast();
   const id = params.id as string;
 
-  // Remove places from destructuring since PlaceSelect handles it internally
   const { isLoading: placesLoading } = usePlaces();
   const { data: route, isLoading: routeLoading } = useRoute(id);
   const { updateRoute, isUpdating } = useEditRoute(id);
@@ -52,39 +48,43 @@ export default function EditRoutePage() {
   const [openStart, setOpenStart] = useState(false);
   const [openDest, setOpenDest] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<RouteFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      startLocation: route?.startLocation || "",
-      destination: route?.destination || "",
-      mileage: route?.mileage,
-      date: route?.date ? new Date(route.date).toISOString().split("T")[0] : "",
-      notes: route?.notes || "",
+      fromPlaceId: "",
+      toPlaceId: "",
+      startMileage: 0,
+      endMileage: 0,
+      date: "",
+      notes: "",
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      await updateRoute(values, {
-        onSuccess: () => {
-          toast({
-            title: "Success",
-            description: "Route updated successfully",
-          });
-          router.push(`/routes/${id}`);
-        },
-        onError: (error) => {
-          toast({
-            title: "Error",
-            description: "Failed to update route. Please try again.",
-            variant: "destructive",
-          });
-        },
+  useEffect(() => {
+    if (route) {
+      form.reset({
+        fromPlaceId: route.fromPlaceId,
+        toPlaceId: route.toPlaceId,
+        startMileage: route.startMileage,
+        endMileage: route.endMileage,
+        date: route.date ? new Date(route.date).toISOString().split("T")[0] : "",
+        notes: route.notes ?? "",
       });
+    }
+  }, [form, route]);
+
+  const onSubmit = async (values: RouteFormData) => {
+    try {
+      await updateRoute(values);
+      toast({
+        title: "Success",
+        description: "Route updated successfully",
+      });
+      router.push(`/routes/${id}`);
     } catch (error) {
       toast({
         title: "Error",
-        description: "Something went wrong. Please try again.",
+        description: "Failed to update route. Please try again.",
         variant: "destructive",
       });
     }
@@ -99,7 +99,7 @@ export default function EditRoutePage() {
   }
 
   return (
-    <main className="container mx-auto max-w-3xl py-8 px-4 md:px-6">
+    <main className="container mx-auto max-w-5xl py-8 px-4 md:px-6">
       <div className="flex items-center mb-6">
         <Button variant="ghost" size="icon" asChild className="mr-4">
           <Link href={`/routes/${id}`}>
@@ -113,60 +113,62 @@ export default function EditRoutePage() {
         <CardContent className="pt-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="startLocation"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Start Location</FormLabel>
-                      <FormControl>
-                        <PlaceSelect
-                          value={field.value}
-                          onChange={field.onChange}
-                          open={openStart}
-                          onOpenChange={setOpenStart}
-                          placeholder="Select start location"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              {/* Start Location */}
+              <FormField
+                control={form.control}
+                name="fromPlaceId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Start Location</FormLabel>
+                    <FormControl>
+                      <PlaceSelect
+                        value={field.value}
+                        onChange={field.onChange}
+                        open={openStart}
+                        onOpenChange={setOpenStart}
+                        placeholder="Select start location"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="destination"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Destination</FormLabel>
-                      <FormControl>
-                        <PlaceSelect
-                          value={field.value}
-                          onChange={field.onChange}
-                          open={openDest}
-                          onOpenChange={setOpenDest}
-                          placeholder="Select destination"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              {/* Destination */}
+              <FormField
+                control={form.control}
+                name="toPlaceId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Destination</FormLabel>
+                    <FormControl>
+                      <PlaceSelect
+                        value={field.value}
+                        onChange={field.onChange}
+                        open={openDest}
+                        onOpenChange={setOpenDest}
+                        placeholder="Select destination"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Mileage Fields */}
+              <div className="grid gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
-                  name="mileage"
+                  name="startMileage"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Current Mileage</FormLabel>
+                      <FormLabel>Start Mileage</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
-                          placeholder="Enter current mileage"
+                          placeholder="Enter start mileage"
                           {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                         />
                       </FormControl>
                       <FormMessage />
@@ -176,12 +178,17 @@ export default function EditRoutePage() {
 
                 <FormField
                   control={form.control}
-                  name="date"
+                  name="endMileage"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Date</FormLabel>
+                      <FormLabel>End Mileage</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input
+                          type="number"
+                          placeholder="Enter end mileage"
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -189,6 +196,22 @@ export default function EditRoutePage() {
                 />
               </div>
 
+              {/* Date Field */}
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Notes Field */}
               <FormField
                 control={form.control}
                 name="notes"
