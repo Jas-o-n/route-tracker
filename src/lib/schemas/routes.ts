@@ -70,6 +70,8 @@ export const updateRouteSchema = z.object({
 export const mostFrequentRouteSchema = z.object({
   fromPlaceId: z.string().uuid(),
   toPlaceId: z.string().uuid(),
+  fromName: z.string(),
+  toName: z.string(),
   count: z.number().int().positive(),
 });
 

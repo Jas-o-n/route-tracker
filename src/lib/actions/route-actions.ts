@@ -3,10 +3,12 @@ import {
   routeWithStatsSchema, 
   routeFormSchema,
   routeModelSchema,
+  routeStatsSchema,
   type Route,
   type RouteWithStats,
   type RouteFormData,
   type RouteModel,
+  type RouteStats,
 } from "@/lib/schemas/routes";
 import { db } from "@/lib/db";
 import { routes } from "@/lib/db/schema";
@@ -156,7 +158,7 @@ export async function deleteRoute(id: string): Promise<boolean> {
   return result.length > 0;
 }
 
-export async function getRouteStats(): Promise<any> {
+export async function getRouteStats(): Promise<RouteStats> {
   // First, get all places to create a lookup map
   const allPlaces = await db.query.places.findMany();
   const placesMap = new Map(allPlaces.map(place => [place.id, place.name]));
@@ -181,17 +183,25 @@ export async function getRouteStats(): Promise<any> {
     routeCounts[key].count++;
   });
   
-  const mostFrequentRoute = Object.values(routeCounts)
-    .reduce((max, current) => current.count > max.count ? current : max);
-  
-  return {
+  const mostFrequentRoute =
+  Object.values(routeCounts).reduce(
+    (max, current) => current.count > max.count ? current : max,
+    { count: 0, from: "", to: "", fromName: "", toName: "" }
+  );
+
+  const stats = {
     totalRoutes: allRoutes.length,
     totalMiles,
-    mostFrequentRoute: {
-      ...mostFrequentRoute,
+    mostFrequentRoute: mostFrequentRoute ? {
       fromPlaceId: mostFrequentRoute.from,
       toPlaceId: mostFrequentRoute.to,
-    },
-    avgMileagePerRoute: totalMiles / allRoutes.length,
+      fromName: mostFrequentRoute.fromName,
+      toName: mostFrequentRoute.toName,
+      count: mostFrequentRoute.count
+    } : null,
+    avgMileagePerRoute: allRoutes.length ? totalMiles / allRoutes.length : 0,
   };
+
+  // Validate and return the stats object
+  return routeStatsSchema.parse(stats);
 }
