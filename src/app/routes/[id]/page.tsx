@@ -27,19 +27,6 @@ export default function RouteDetailPage() {
   const { data: route, isLoading: routeLoading, isError } = useRoute(id);
   const { deleteRoute, isDeleting } = useRoutes();
 
-  console.log('Route details:', {
-    id,
-    route,
-    routeData: route ? {
-      fromPlaceId: route.fromPlaceId,
-      toPlaceId: route.toPlaceId,
-      startMileage: route.startMileage,
-      endMileage: route.endMileage,
-      stats: route.stats
-    } : null,
-    places: places.map(p => ({ id: p.id, name: p.name }))
-  });
-
   const handleDeleteRoute = async () => {
     await deleteRoute(id, {
       onSuccess: () => {

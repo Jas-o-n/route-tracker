@@ -30,8 +30,14 @@ const formSchema = z.object({
   startMileage: z.coerce.number().nonnegative(),
   endMileage: z.coerce.number().nonnegative(),
   date: z.string(),
-  notes: z.string(),
-});
+  notes: z.string().optional(),
+}).refine(
+  (data) => data.endMileage >= data.startMileage,
+  {
+    message: "End mileage must be greater than or equal to start mileage",
+    path: ["endMileage"], // Display error on endMileage field
+  }
+);
 
 type RouteFormData = z.infer<typeof formSchema>;
 

@@ -7,15 +7,12 @@ interface DeleteOptions {
   onError?: (error: Error) => void;
 }
 
-interface AddOptions {
+type MutationOptions = {
   onSuccess?: () => void;
   onError?: (error: Error) => void;
-}
-
-interface UpdateOptions {
-  onSuccess?: () => void;
-  onError?: (error: Error) => void;
-}
+};
+type AddOptions    = MutationOptions;
+type UpdateOptions = MutationOptions;
 
 export function useRoutes() {
   const queryClient = useQueryClient();
