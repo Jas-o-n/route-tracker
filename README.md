@@ -5,6 +5,7 @@ Todo:
 -[ ] autofill start mileage
 -[ ] route details edit/delete button fix
 -[ ] route map map display
+-[ ] places map zoom
 -[ ] minor ui fixes (places searchbar after deleting something, some icons not aligned properly, route details route map size)
 
 Potential:

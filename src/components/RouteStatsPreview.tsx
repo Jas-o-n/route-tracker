@@ -58,7 +58,7 @@ export default function RouteStatsPreview({ initialStats }: RouteStatsPreviewPro
     {
       title: "Most Frequent Route",
       value: currentStats.mostFrequentRoute
-        ? `${currentStats.mostFrequentRoute.from} → ${currentStats.mostFrequentRoute.to}`
+        ? `${currentStats.mostFrequentRoute.fromName} → ${currentStats.mostFrequentRoute.toName}`
         : "N/A",
       subtitle: currentStats.mostFrequentRoute ? `${currentStats.mostFrequentRoute.count} times` : "",
       icon: <MapPin className="h-6 w-6" />,

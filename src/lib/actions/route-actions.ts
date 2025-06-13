@@ -157,13 +157,15 @@ export async function deleteRoute(id: string): Promise<boolean> {
 }
 
 export async function getRouteStats(): Promise<any> {
+  // First, get all places to create a lookup map
+  const allPlaces = await db.query.places.findMany();
+  const placesMap = new Map(allPlaces.map(place => [place.id, place.name]));
+  
   const allRoutes = await getAllRoutes();
   const totalMiles = allRoutes.reduce((sum, r) => sum + r.distance, 0);
-
-
   
   // Find most frequent route
-  const routeCounts: Record<string, { from: string; to: string; count: number }> = {};
+  const routeCounts: Record<string, { from: string; to: string; fromName: string; toName: string; count: number }> = {};
   
   allRoutes.forEach((route) => {
     const key = `${route.fromPlaceId}-${route.toPlaceId}`;
@@ -171,6 +173,8 @@ export async function getRouteStats(): Promise<any> {
       routeCounts[key] = {
         from: route.fromPlaceId,
         to: route.toPlaceId,
+        fromName: placesMap.get(route.fromPlaceId) || 'Unknown Place',
+        toName: placesMap.get(route.toPlaceId) || 'Unknown Place',
         count: 0,
       };
     }
@@ -181,9 +185,13 @@ export async function getRouteStats(): Promise<any> {
     .reduce((max, current) => current.count > max.count ? current : max);
   
   return {
-    totalRoutes,
+    totalRoutes: allRoutes.length,
     totalMiles,
-    mostFrequentRoute,
-    avgMileagePerRoute: totalMiles / totalRoutes,
+    mostFrequentRoute: {
+      ...mostFrequentRoute,
+      fromPlaceId: mostFrequentRoute.from,
+      toPlaceId: mostFrequentRoute.to,
+    },
+    avgMileagePerRoute: totalMiles / allRoutes.length,
   };
 }
