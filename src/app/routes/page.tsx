@@ -15,26 +15,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "@/hooks/use-toast";
 
 export default function RoutesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("date-desc");
 
-  const handleExport = async (startDate: Date, endDate: Date) => {
-    try {
-      const csv = await getRoutesForExport(startDate, endDate);
-      // Create a blob and download it
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `routes-${startDate.toISOString().split('T')[0]}_to_${endDate.toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error('Failed to export routes:', error);
+const handleExport = async (startDate: Date, endDate: Date) => {
+  let blobUrl: string | null = null;
+   try {
+     const csv = await getRoutesForExport(startDate, endDate, 'default-user');
+     // Create a blob and download it
+     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    blobUrl = URL.createObjectURL(blob);
+     const link = document.createElement('a');
+    link.href = blobUrl;
+     link.download = `routes-${startDate.toISOString().split('T')[0]}_to_${endDate.toISOString().split('T')[0]}.csv`;
+     document.body.appendChild(link);
+     link.click();
+     document.body.removeChild(link);
+   } catch (error) {
+     console.error('Failed to export routes:', error);
+     toast({
+       variant: "destructive",
+       description: "Failed to export routes. Please try again."
+     });
+  } finally {
+    if (blobUrl) {
+      URL.revokeObjectURL(blobUrl);
     }
-  };
+   }
+ };
 
   return (
     <main className="container mx-auto max-w-5xl py-8 px-4 md:px-6">

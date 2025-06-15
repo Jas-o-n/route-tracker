@@ -216,10 +216,22 @@ export type ExportableRoute = {
   notes: string | null;
 };
 
-export async function getRoutesForExport(startDate: Date, endDate: Date): Promise<string> {
+export async function getRoutesForExport(startDate: Date, endDate: Date, userID: string): Promise<string> {
+  // Set the end date to the end of the day (23:59:59.999)
+  const endOfDay = new Date(endDate);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  // Set the start date to the start of the day (00:00:00.000)
+  const startOfDay = new Date(startDate);
+  startOfDay.setHours(0, 0, 0, 0);
+
   const result = await db.query.routes.findMany({
-    where: (routes, { and, gte, lte }) =>
-      and(gte(routes.date, startDate), lte(routes.date, endDate)),
+    where: (routes, { and, gte, lte, eq }) =>
+      and(
+        gte(routes.date, startOfDay),
+        lte(routes.date, endOfDay),
+        eq(routes.userID, userID)
+      ),
     with: {
       fromPlace: {
         columns: {
@@ -257,11 +269,14 @@ export async function getRoutesForExport(startDate: Date, endDate: Date): Promis
     route.notes || ''
   ]);
 
+  const quote = (cell: unknown) => {
+    const str = String(cell).replace(/"/g, '""');     // escape quotes
+    return /[",\n\r]/.test(str) ? `"${str}"` : str;   // wrap if needed
+  };
+
   const csv = [
     headers.join(','),
-    ...rows.map(row => row.map(String).map(cell => 
-      cell.includes(',') ? `"${cell}"` : cell
-    ).join(','))
+    ...rows.map(row => row.map(quote).join(',')),
   ].join('\n');
 
   return csv;
