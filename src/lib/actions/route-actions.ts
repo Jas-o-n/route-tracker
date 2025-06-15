@@ -205,3 +205,64 @@ export async function getRouteStats(): Promise<RouteStats> {
   // Validate and return the stats object
   return routeStatsSchema.parse(stats);
 }
+
+export type ExportableRoute = {
+  date: string;
+  fromPlace: string;
+  toPlace: string;
+  startMileage: number;
+  endMileage: number;
+  distance: number;
+  notes: string | null;
+};
+
+export async function getRoutesForExport(startDate: Date, endDate: Date): Promise<string> {
+  const result = await db.query.routes.findMany({
+    where: (routes, { and, gte, lte }) =>
+      and(gte(routes.date, startDate), lte(routes.date, endDate)),
+    with: {
+      fromPlace: {
+        columns: {
+          name: true,
+        },
+      },
+      toPlace: {
+        columns: {
+          name: true,
+        },
+      },
+    },
+    orderBy: [desc(routes.date)],
+  });
+
+  const exportableRoutes: ExportableRoute[] = result.map((route) => ({
+    date: route.date.toISOString().split('T')[0],
+    fromPlace: route.fromPlace.name,
+    toPlace: route.toPlace.name,
+    startMileage: route.startMileage,
+    endMileage: route.endMileage,
+    distance: route.distance,
+    notes: route.notes,
+  }));
+
+  // Convert to CSV
+  const headers = ['Date', 'From', 'To', 'Start Mileage', 'End Mileage', 'Distance', 'Notes'];
+  const rows = exportableRoutes.map(route => [
+    route.date,
+    route.fromPlace,
+    route.toPlace,
+    route.startMileage,
+    route.endMileage,
+    route.distance,
+    route.notes || ''
+  ]);
+
+  const csv = [
+    headers.join(','),
+    ...rows.map(row => row.map(String).map(cell => 
+      cell.includes(',') ? `"${cell}"` : cell
+    ).join(','))
+  ].join('\n');
+
+  return csv;
+}

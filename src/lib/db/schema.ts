@@ -1,4 +1,5 @@
 import { pgTable, text, timestamp, integer, uuid, decimal } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 export const places = pgTable("places", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -32,3 +33,14 @@ export const routes = pgTable("routes", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const routesRelations = relations(routes, ({ one }) => ({
+  fromPlace: one(places, {
+    fields: [routes.fromPlaceId],
+    references: [places.id],
+  }),
+  toPlace: one(places, {
+    fields: [routes.toPlaceId],
+    references: [places.id],
+  }),
+}));
