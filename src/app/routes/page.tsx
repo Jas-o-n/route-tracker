@@ -30,7 +30,11 @@ const handleExport = async (startDate: Date, endDate: Date) => {
     blobUrl = URL.createObjectURL(blob);
      const link = document.createElement('a');
     link.href = blobUrl;
-     link.download = `routes-${startDate.toISOString().split('T')[0]}_to_${endDate.toISOString().split('T')[0]}.csv`;
+     // Format date as YYYY-MM-DD in local timezone
+     const formatDate = (date: Date) => {
+       return date.toLocaleDateString('en-CA'); // en-CA gives YYYY-MM-DD format
+     };
+     link.download = `routes-${formatDate(startDate)}_to_${formatDate(endDate)}.csv`;
      document.body.appendChild(link);
      link.click();
      document.body.removeChild(link);

@@ -64,7 +64,7 @@ export function ExportRoutesDialog({ onExport }: ExportRoutesDialogProps) {
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
-                initialFocus
+                autoFocus
                 mode="range"
                 selected={dateRange}
                 onSelect={setDateRange}

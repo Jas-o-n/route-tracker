@@ -2,7 +2,7 @@ Todo:
 
 -[x] Home page Driving Summary stats fix
 -[x] route details edit/delete button fix
--[ ] csv export button
+-[x] csv export button
 -[ ] route map map display
 -[ ] shadcn date picker
 -[ ] autofill start mileage

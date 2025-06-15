@@ -236,11 +236,13 @@ export async function getRoutesForExport(startDate: Date, endDate: Date, userID:
       fromPlace: {
         columns: {
           name: true,
+          full_address: true,
         },
       },
       toPlace: {
         columns: {
           name: true,
+          full_address: true,
         },
       },
     },
@@ -249,8 +251,8 @@ export async function getRoutesForExport(startDate: Date, endDate: Date, userID:
 
   const exportableRoutes: ExportableRoute[] = result.map((route) => ({
     date: route.date.toISOString().split('T')[0],
-    fromPlace: route.fromPlace.name,
-    toPlace: route.toPlace.name,
+    fromPlace: route.fromPlace.full_address,
+    toPlace: route.toPlace.full_address,
     startMileage: route.startMileage,
     endMileage: route.endMileage,
     distance: route.distance,
