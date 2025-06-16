@@ -29,12 +29,18 @@ export class MapboxService {
         headers: { 'Accept': 'application/json' }
       });
 
-      if (!res.ok) {
-        const error = await res.json().catch(() => ({ message: res.statusText }));
-        throw new Error(error.message || 'Failed to fetch suggestions');
+      const payload = await res
+        .clone()          // avoid body-consumed issues
+        .json()
+        .catch(() => null);
+
+      if (!res.ok || !payload) {
+        throw new Error(
+          (payload as any)?.message || res.statusText || 'Failed to fetch suggestions'
+        );
       }
 
-      const data = await res.json();
+      const data = payload;
       if (!data.features?.length) return [];
 
       return data.features.map((feature: any) => ({
