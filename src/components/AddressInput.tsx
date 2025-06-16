@@ -133,9 +133,9 @@ export default function AddressInput({
             {...{
               feature: convertToGeoJSONFeature(minimapFeature),
               show: true,
-              satelliteToggle: true,
-              canAdjustMarker: true,
-              footer: true,
+              // satelliteToggle: true,
+              // canAdjustMarker: true,
+              // footer: true,
               accessToken: process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? (() => {
                 throw new Error('Missing NEXT_PUBLIC_MAPBOX_TOKEN');
  })(),
