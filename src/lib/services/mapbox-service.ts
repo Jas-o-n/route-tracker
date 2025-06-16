@@ -6,139 +6,38 @@ if (!MAPBOX_TOKEN) {
   throw new Error('MAPBOX_TOKEN is required');
 }
 
-// Coordinate validation constants
-const COORDINATE_LIMITS = {
-  MIN_LATITUDE: -90,
-  MAX_LATITUDE: 90,
-  MIN_LONGITUDE: -180,
-  MAX_LONGITUDE: 180,
-} as const;
-
 export class MapboxService {
-  private sessionToken: string;
-  private debug: boolean;
-
-  constructor(debug = false) {
-    this.sessionToken = crypto.randomUUID();
-    this.debug = debug;
-  }
-
-  private log(...args: unknown[]) {
-    if (this.debug) {
-      console.log('[MapboxService]', ...args);
-    }
-  }
-  private logError(...args: unknown[]) {
-    // Ensure objects are properly stringified
-    const formattedArgs = args.map(arg => 
-      arg instanceof Error ? arg.message :
-      typeof arg === 'object' ? JSON.stringify(arg, null, 2) :
-      String(arg)
-    );
-    console.error('[MapboxService]', ...formattedArgs);
-  }
-
-  private refreshSessionToken() {
-    this.sessionToken = crypto.randomUUID();
-  }
-  private buildUrl(endpoint: string, params: Record<string, string>): string {
-    const searchParams = new URLSearchParams();
-    
-    // Add passed parameters
-    Object.entries(params).forEach(([key, value]) => {
-      searchParams.append(key, value);
-    });
-
-// Add required parameters
-searchParams.append('access_token', MAPBOX_TOKEN!);
-searchParams.append('session_token', this.sessionToken);
-
+  private buildUrl(endpoint: string, params: Record<string, string> = {}): string {
+    const searchParams = new URLSearchParams(params);
+    searchParams.append('access_token', MAPBOX_TOKEN!);
     return `https://api.mapbox.com/geocoding/v5/mapbox.places/${endpoint}.json?${searchParams.toString()}`;
   }
 
-  private validateCoordinates(coords: Coordinates): void {
-    if (coords.latitude < COORDINATE_LIMITS.MIN_LATITUDE || coords.latitude > COORDINATE_LIMITS.MAX_LATITUDE) {
-      throw new Error(`Invalid latitude: ${coords.latitude}. Must be between ${COORDINATE_LIMITS.MIN_LATITUDE} and ${COORDINATE_LIMITS.MAX_LATITUDE}`);
-    }
-    if (coords.longitude < COORDINATE_LIMITS.MIN_LONGITUDE || coords.longitude > COORDINATE_LIMITS.MAX_LONGITUDE) {
-      throw new Error(`Invalid longitude: ${coords.longitude}. Must be between ${COORDINATE_LIMITS.MIN_LONGITUDE} and ${COORDINATE_LIMITS.MAX_LONGITUDE}`);
-    }
-  }
-
   async getSuggestions(query: string, signal?: AbortSignal): Promise<SearchBoxFeature[]> {
-    if (!query) {
-      throw new Error('Query parameter is required');
-    }
+    if (!query || query.length < 3) return [];
 
-    if (query.length < 3) {
-      this.log('Query too short, returning empty results');
-      return [];
-    }    try {
-      const encodedQuery = encodeURIComponent(query);
-      const url = this.buildUrl(encodedQuery, {
+    try {
+      const params = {
         limit: '5',
         types: 'address',
         language: 'en',
         autocomplete: 'true'
-      });
+      };
 
-      this.log('Fetching suggestions from:', url);
-
-      const res = await fetch(url, { 
+      const res = await fetch(this.buildUrl(encodeURIComponent(query), params), { 
         signal,
         headers: { 'Accept': 'application/json' }
       });
-        if (!res.ok) {
-        const errorText = await res.text();
-        let errorMessage: string;
-        let errorDetails: Record<string, unknown>;
-        
-        try {
-          const errorJson = JSON.parse(errorText);
-          errorMessage = typeof errorJson.message === 'string' ? errorJson.message :
-                        typeof errorJson.error === 'string' ? errorJson.error :
-                        JSON.stringify(errorJson);
-          errorDetails = {
-            parsed: errorJson,
-            status: res.status,
-            statusText: res.statusText,
-            headers: Object.fromEntries(res.headers.entries())
-          };
-        } catch (parseError) {
-          errorMessage = errorText || res.statusText;
-          errorDetails = {
-            raw: errorText,
-            status: res.status,
-            statusText: res.statusText,
-            headers: Object.fromEntries(res.headers.entries())
-          };
-        }
 
-        this.logError('API error:', errorDetails);
-        
-        // Handle specific error cases
-        switch (res.status) {
-          case 401:
-            throw new Error('Invalid Mapbox access token');
-          case 403:
-            throw new Error('Mapbox API access forbidden - check token permissions');
-          case 429:
-            throw new Error('Rate limit exceeded - please try again later');
-          case 400:
-            throw new Error(`Bad request: ${errorMessage}`);
-          default:
-            throw new Error(`Mapbox API error (${res.status}): ${errorMessage}`);
-        }
-      }
-        const data = await res.json();
-      this.log('API response:', data);
-      
-      if (!data.features || !Array.isArray(data.features)) {
-        this.log('No features in response');
-        return [];
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({ message: res.statusText }));
+        throw new Error(error.message || 'Failed to fetch suggestions');
       }
 
-      const suggestions = data.features.map((feature: any) => ({
+      const data = await res.json();
+      if (!data.features?.length) return [];
+
+      return data.features.map((feature: any) => ({
         id: feature.id,
         text: feature.text || feature.place_name,
         place_name: feature.place_name,
@@ -157,121 +56,51 @@ searchParams.append('session_token', this.sessionToken);
           }, {})
         }
       }));
-
-      this.log(`Converted ${data.features.length} features to ${suggestions.length} suggestions`);
-      return suggestions;
     } catch (error) {
-      // Don't log AbortError as it's an expected error when requests are cancelled
       if (error instanceof Error && error.name !== 'AbortError') {
-        this.logError('Suggestion fetch error:', error);
+        console.error('Mapbox suggestion error:', error);
       }
       throw error;
     }
   }
 
-  async retrievePlace(id: string, signal?: AbortSignal): Promise<SearchBoxFeature | null> {
-    try {
-      const url = this.buildUrl(`retrieve/${id}`, {});
-
-      const res = await fetch(url, { signal });
-      if (!res.ok) {
-        const error = await res.json().catch(() => ({ message: res.statusText }));
-        throw new Error(`Mapbox API error: ${error.message || res.statusText}`);
-      }
-      
-      const data = await res.json();
-      const feature = data.features?.[0];
-
-      // Validate feature has required properties before returning
-      if (feature?.id && 
-          feature?.properties && 
-          (feature?.center || feature?.geometry?.coordinates)) {
-        return feature;
-      }
-      return null;
-    } catch (error) {
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Failed to retrieve place details');
-    }
-  }
-
   extractCoordinates(feature: SearchBoxFeature): Coordinates {
-    if (!feature) {
-      throw new Error('Feature object is required');
-    }
+    if (!feature) throw new Error('Feature object is required');
 
-    let coordinates: Coordinates;
+    // Try geometry coordinates first, then fall back to center
+    const coords = feature.geometry?.coordinates || feature.center;
+    if (!coords?.length) throw new Error('No coordinates found in feature');
 
-    // First try geometry coordinates
-    if (feature.geometry?.coordinates?.length === 2) {
-      const [longitude, latitude] = feature.geometry.coordinates;
-      coordinates = { latitude, longitude };
-    }
-    // Fallback to center coordinates
-    else if (feature.center?.length === 2) {
-      const [longitude, latitude] = feature.center;
-      coordinates = { latitude, longitude };
-    }
-    else {
-      throw new Error('Invalid or missing coordinates in feature');
-    }
-
-    // Validate the coordinates
-    this.validateCoordinates(coordinates);
-    return coordinates;
+    return {
+      latitude: coords[1],
+      longitude: coords[0]
+    };
   }
 
   extractAddressComponents(feature: SearchBoxFeature): AddressComponents {
-    if (!feature) {
-      throw new Error('Feature object is required');
-    }
-    if (!feature.properties) {
-      throw new Error('Feature must have properties object');
+    if (!feature?.properties) {
+      throw new Error('Invalid feature object');
     }
 
     const { properties, place_name = '', text = '' } = feature;
     const context = properties.context || {};
 
-    // Build address components
     const components: AddressComponents = {
-      name: text || properties.name,  // Name of the place from text field
-      address: place_name,  // Full formatted address
-      addressLine1: text, // Street name from the text field
+      name: text || properties.name,
+      address: place_name,
+      addressLine1: text,
+      addressLine2: properties.address,
+      city: context.place?.name,
+      region: context.region?.name,
+      postcode: context.postcode?.name,
+      country: context.country?.name,
     };
 
-    // House number from the address property
-    if (properties.address) {
-      components.addressLine2 = properties.address; // House number
-    }
-
-    // Process context for address components
-    if (properties.context) {
-      if (context.place?.name?.trim()) {
-        components.city = context.place.name;
-      }
-      if (context.region?.name?.trim()) {
-        components.region = context.region.name;
-      }
-      if (context.postcode?.name?.trim()) {
-        components.postcode = context.postcode.name;
-      }
-      if (context.country?.name?.trim()) {
-        components.country = context.country.name;
-      }
-    }
-
-    // Set full_address and shortAddress
-components.shortAddress = [components.addressLine2, components.addressLine1]
-   .filter(Boolean)
-   .join(' ');
+    // Set short address
+    components.shortAddress = [components.addressLine2, components.addressLine1]
+      .filter(Boolean)
+      .join(' ');
 
     return components;
-  }
-
-  // Call this when you're done with the current session
-  endSession() {
-    this.refreshSessionToken();
   }
 }

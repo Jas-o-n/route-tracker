@@ -31,17 +31,6 @@ export function useAddressSearch(query: string) {
   });
 }
 
-export function useRetrievePlace(id: string | null) {
-  const mapboxService = useMapboxService();
-
-  return useQuery({
-    queryKey: ['place-details', id],
-    queryFn: ({ signal }) => mapboxService.retrievePlace(id!, signal),
-    enabled: !!id,
-    staleTime: Infinity,
-  });
-}
-
 export function formatAddress(feature: SearchBoxFeature): AddressDisplay {
   try {
     // Extract components for any additional formatting needed
