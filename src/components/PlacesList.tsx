@@ -3,11 +3,17 @@ import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/ca
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
+import type { Place } from "@/lib/schemas/places";
 
-const PlacesList: React.FC<any> = React.memo(function PlacesList({ places, handleDeletePlace }) {
+interface PlacesListProps {
+  places: Place[];
+  handleDeletePlace: (id: string) => void | Promise<void>;
+}
+
+const PlacesList: React.FC<PlacesListProps> = React.memo(function PlacesList({ places, handleDeletePlace }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {places.map((place: any) => (
+      {places.map((place) => (
         <Card key={place.id}>
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">

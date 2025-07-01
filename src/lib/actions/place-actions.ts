@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { places } from "@/lib/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import {
   placeSchema,
   placeModelSchema,
@@ -79,9 +79,9 @@ export async function addPlace(
   return convertToPlace(newPlace);
 }
 
-export async function deletePlace(id: string): Promise<boolean> {
+export async function deletePlace(id: string, userID: string): Promise<boolean> {
   const result = await db.delete(places)
-    .where(eq(places.id, id))
+    .where(and(eq(places.id, id), eq(places.userID, userID)))
     .returning();
   
   return result.length > 0;

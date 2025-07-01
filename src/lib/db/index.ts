@@ -2,8 +2,9 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import * as schema from "./schema";
 
-// Debug: Log the DATABASE_URL to verify it's loaded
-console.log("DATABASE_URL:", process.env.DATABASE_URL);
+if (process.env.NODE_ENV === 'development') {
+  console.log("DATABASE_URL loaded:", !!process.env.DATABASE_URL);
+}
 
 const connectionString = process.env.DATABASE_URL;
 

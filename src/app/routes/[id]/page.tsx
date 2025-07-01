@@ -29,6 +29,7 @@ export default function RouteDetailPage() {
 
   const handleDeleteRoute = async () => {
     await deleteRoute(id);
+    router.push("/routes");
   };
   
   if (routeLoading || placesLoading) {

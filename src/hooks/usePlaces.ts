@@ -29,7 +29,6 @@ export function usePlaceMutations() {
   const [isAdding, setIsAdding] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
 
   const addPlace = async (feature: SearchBoxFeature, placeName: string) => {
     setIsAdding(true);

@@ -9,14 +9,17 @@ export async function getPlacesAction() {
   return await getPlaces(userId);
 }
 
-export async function addPlaceAction(feature: any, placeName: string) {
+import type { SearchBoxFeature } from "@/lib/schemas/places";
+
+export async function addPlaceAction(feature: SearchBoxFeature, placeName: string) {
   const { userId } = await auth();
   if (!userId) throw new Error("Not authenticated");
   const result = await addPlace(feature, placeName, userId);
   return result;
 }
-
 export async function deletePlaceAction(id: string) {
-  const result = await deletePlace(id);
+  const { userId } = await auth();
+  if (!userId) throw new Error("Not authenticated");
+  const result = await deletePlace(id, userId);
   return result;
 }

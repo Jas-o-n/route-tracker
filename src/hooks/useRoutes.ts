@@ -22,12 +22,18 @@ export function useRoutes() {
   const deleteRoute = async (id: string) => {
     setIsDeleting(true);
     setDeletingId(id);
-    await deleteRouteAction(id);
-    // Refresh routes after deletion
-    const data = await getAllRoutesAction();
-    setRoutes(data);
-    setIsDeleting(false);
-    setDeletingId(null);
+    try {
+      await deleteRouteAction(id);
+      // Refresh routes after deletion
+      const data = await getAllRoutesAction();
+      setRoutes(data);
+    } catch (error) {
+      // Log or handle the error as needed
+      console.error('Failed to delete route:', error);
+    } finally {
+      setIsDeleting(false);
+      setDeletingId(null);
+    }
   };
 
   return {
@@ -113,7 +119,7 @@ export function useEditRoute(id: string) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const updateRoute = async (data: any) => {
+  const updateRoute = async (data: Partial<RouteFormData>) => {
     setIsUpdating(true);
     setError(null);
     try {
@@ -124,6 +130,5 @@ export function useEditRoute(id: string) {
       setIsUpdating(false);
     }
   };
-
   return { updateRoute, isUpdating, error };
 }
