@@ -1,122 +1,129 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import * as routeActions from '@/lib/actions/route-actions';
-import type { Route, RouteFormData, RouteWithStats, RouteModel } from '@/lib/schemas/routes';
-
-interface DeleteOptions {
-  onSuccess?: () => void;
-  onError?: (error: Error) => void;
-}
-
-type MutationOptions = {
-  onSuccess?: () => void;
-  onError?: (error: Error) => void;
-};
-type AddOptions    = MutationOptions;
-type UpdateOptions = MutationOptions;
+import { useEffect, useState, useTransition } from "react";
+import type { Route, RouteFormData, RouteStats } from '@/lib/schemas/routes';
+import { getAllRoutesAction, deleteRouteAction, createRouteAction, getRouteByIdAction, updateRouteAction } from "@/app/routes/route-actions";
+import { getRouteStatsAction } from "@/app/routes/route-stats-action";
+import { getRecentRoutesAction } from "@/app/routes/recent-routes-action";
 
 export function useRoutes() {
-  const queryClient = useQueryClient();
+  const [routes, setRoutes] = useState<Route[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
-  const routes = useQuery<Route[]>({
-    queryKey: ['routes'],
-    queryFn: routeActions.getAllRoutes,
-  });
+  useEffect(() => {
+    setIsLoading(true);
+    getAllRoutesAction().then((data) => {
+      setRoutes(data);
+      setIsLoading(false);
+    });
+  }, []);
 
-  const deleteRouteMutation = useMutation({
-    mutationFn: routeActions.deleteRoute,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['routes'] });
-      queryClient.invalidateQueries({ queryKey: ['routeStats'] });
-    },
-  });
+  const deleteRoute = async (id: string) => {
+    setIsDeleting(true);
+    setDeletingId(id);
+    await deleteRouteAction(id);
+    // Refresh routes after deletion
+    const data = await getAllRoutesAction();
+    setRoutes(data);
+    setIsDeleting(false);
+    setDeletingId(null);
+  };
 
   return {
-    routes: routes.data ?? [],
-    isLoading: routes.isLoading,
-    isError: routes.isError,    deleteRoute: async (id: string, options?: DeleteOptions) => {
-      try {
-        await deleteRouteMutation.mutateAsync(id);
-        options?.onSuccess?.();
-      } catch (error) {
-        options?.onError?.(error instanceof Error ? error : new Error('Failed to delete route'));
-        throw error;
-      }
-    },
-    deletingId: deleteRouteMutation.isPending ? deleteRouteMutation.variables as string : null,
-    isDeleting: deleteRouteMutation.isPending,
+    routes,
+    isLoading,
+    isDeleting,
+    deletingId,
+    deleteRoute,
   };
 }
 
 export function useAddRoute() {
-  const queryClient = useQueryClient();
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
-  const mutation = useMutation({
-    mutationFn: (data: RouteFormData) => routeActions.createRoute(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['routes'] });
-      queryClient.invalidateQueries({ queryKey: ['routeStats'] });
-    },
-  });
-
-  return {
-    addRoute: async (data: RouteFormData, options?: AddOptions) => {
+  const addRoute = async (data: RouteFormData) => {
+    setError(null);
+    startTransition(async () => {
       try {
-        await mutation.mutateAsync(data);
-        options?.onSuccess?.();
-      } catch (error) {
-        options?.onError?.(error instanceof Error ? error : new Error('Failed to add route'));
-        throw error;
+        await createRouteAction(data);
+      } catch (e) {
+        setError("Failed to add route");
       }
-    },
-    isAdding: mutation.isPending,
+    });
   };
-}
 
-export function useRoute(id: string) {
-  return useQuery({
-    queryKey: ['route', id],
-    queryFn: () => routeActions.getRouteById(id),
-    enabled: !!id,
-  });
-}
-
-export function useRecentRoutes() {
-  return useQuery<Route[]>({
-    queryKey: ['routes', 'recent'],
-    queryFn: () => routeActions.getRecentRoutes(),
-  });
+  return { addRoute, isPending, error };
 }
 
 export function useRouteStats() {
-  return useQuery({
-    queryKey: ['routeStats'],
-    queryFn: routeActions.getRouteStats,
-    staleTime: 5 * 60 * 1000, // Consider stats stale after 5 minutes
-  });
+  const [data, setData] = useState<RouteStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsLoading(true);
+    getRouteStatsAction().then((stats) => {
+      setData(stats);
+      setIsLoading(false);
+    });
+  }, []);
+
+  return { data, isLoading };
+}
+
+export function useRecentRoutes(limit = 3) {
+  const [data, setData] = useState<Route[] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsLoading(true);
+    getRecentRoutesAction(limit).then((routes) => {
+      setData(routes);
+      setIsLoading(false);
+    });
+  }, [limit]);
+
+  return { data, isLoading };
+}
+
+export function useRoute(id: string) {
+  const [data, setData] = useState<Route | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    setIsLoading(true);
+    setIsError(false);
+    getRouteByIdAction(id)
+      .then((route) => {
+        setData(route);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        setIsError(true);
+        setIsLoading(false);
+      });
+  }, [id]);
+
+  return { data, isLoading, isError };
 }
 
 export function useEditRoute(id: string) {
-  const queryClient = useQueryClient();
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const mutation = useMutation({
-    mutationFn: (data: Partial<RouteFormData>) => routeActions.updateRoute(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['routes'] });
-      queryClient.invalidateQueries({ queryKey: ['route', id] });
-      queryClient.invalidateQueries({ queryKey: ['routeStats'] });
-    },
-  });
-
-  return {
-    updateRoute: async (data: Partial<RouteFormData>, options?: UpdateOptions) => {
-      try {
-        await mutation.mutateAsync(data);
-        options?.onSuccess?.();
-      } catch (error) {
-        options?.onError?.(error instanceof Error ? error : new Error('Failed to update route'));
-        throw error;
-      }
-    },
-    isUpdating: mutation.isPending,
+  const updateRoute = async (data: any) => {
+    setIsUpdating(true);
+    setError(null);
+    try {
+      await updateRouteAction(id, data);
+    } catch (e) {
+      setError("Failed to update route");
+    } finally {
+      setIsUpdating(false);
+    }
   };
+
+  return { updateRoute, isUpdating, error };
 }

@@ -30,8 +30,9 @@ function convertToRoute(model: RouteModel): Route {
   };
 }
 
-export async function getRecentRoutes(limit = 3): Promise<Route[]> {
+export async function getRecentRoutes(limit = 3, userID: string): Promise<Route[]> {
   const result = await db.query.routes.findMany({
+    where: (routes, { eq }) => eq(routes.userID, userID),
     orderBy: [desc(routes.date)],
     limit: limit,
   });
@@ -39,8 +40,9 @@ export async function getRecentRoutes(limit = 3): Promise<Route[]> {
   return result.map(model => convertToRoute(routeModelSchema.parse(model)));
 }
 
-export async function getAllRoutes(): Promise<Route[]> {
+export async function getAllRoutes(userID: string): Promise<Route[]> {
   const result = await db.query.routes.findMany({
+    where: (routes, { eq }) => eq(routes.userID, userID),
     orderBy: [desc(routes.date)],
   });
 
@@ -96,23 +98,18 @@ const similarRoutes = await db.query.routes.findMany({
   return routeWithStatsSchema.parse(routeWithStats);
 }
 
-export async function createRoute(data: RouteFormData): Promise<Route> {
-  // Validate the form data
+export async function createRoute(data: RouteFormData, userID: string): Promise<Route> {
+  // Validate the form data (does not include userID)
   const validatedData = routeFormSchema.parse(data);
-  
   // Calculate distance
   const distance = validatedData.endMileage - validatedData.startMileage;
 
   const [newRoute] = await db.insert(routes)
     .values({
-      fromPlaceId: validatedData.fromPlaceId,
-      toPlaceId: validatedData.toPlaceId,
-      startMileage: validatedData.startMileage,
-      endMileage: validatedData.endMileage,
+      ...validatedData,
       distance,
       date: new Date(validatedData.date),
-      notes: validatedData.notes,
-      userID: 'default-user', // TODO: Replace with actual user ID
+      userID, // Add userID here
     })
     .returning();
 
@@ -158,12 +155,14 @@ export async function deleteRoute(id: string): Promise<boolean> {
   return result.length > 0;
 }
 
-export async function getRouteStats(): Promise<RouteStats> {
+export async function getRouteStats(userID: string): Promise<RouteStats> {
   // First, get all places to create a lookup map
-  const allPlaces = await db.query.places.findMany();
+  const allPlaces = await db.query.places.findMany({
+    where: (places, { eq }) => eq(places.userID, userID),
+  });
   const placesMap = new Map(allPlaces.map(place => [place.id, place.name]));
   
-  const allRoutes = await getAllRoutes();
+  const allRoutes = await getAllRoutes(userID);
   const totalMiles = allRoutes.reduce((sum, r) => sum + r.distance, 0);
   
   // Find most frequent route
@@ -183,22 +182,32 @@ export async function getRouteStats(): Promise<RouteStats> {
     routeCounts[key].count++;
   });
   
-  const mostFrequentRoute =
-  Object.values(routeCounts).reduce(
+  const mostFrequentRouteRaw = Object.values(routeCounts).reduce(
     (max, current) => current.count > max.count ? current : max,
     { count: 0, from: "", to: "", fromName: "", toName: "" }
   );
 
+  let mostFrequentRoute = null;
+  if (
+    mostFrequentRouteRaw.count > 0 &&
+    mostFrequentRouteRaw.from &&
+    mostFrequentRouteRaw.to &&
+    /^[0-9a-fA-F-]{36}$/.test(mostFrequentRouteRaw.from) &&
+    /^[0-9a-fA-F-]{36}$/.test(mostFrequentRouteRaw.to)
+  ) {
+    mostFrequentRoute = {
+      fromPlaceId: mostFrequentRouteRaw.from,
+      toPlaceId: mostFrequentRouteRaw.to,
+      fromName: mostFrequentRouteRaw.fromName,
+      toName: mostFrequentRouteRaw.toName,
+      count: mostFrequentRouteRaw.count
+    };
+  }
+
   const stats = {
     totalRoutes: allRoutes.length,
     totalMiles,
-    mostFrequentRoute: mostFrequentRoute ? {
-      fromPlaceId: mostFrequentRoute.from,
-      toPlaceId: mostFrequentRoute.to,
-      fromName: mostFrequentRoute.fromName,
-      toName: mostFrequentRoute.toName,
-      count: mostFrequentRoute.count
-    } : null,
+    mostFrequentRoute,
     avgMileagePerRoute: allRoutes.length ? totalMiles / allRoutes.length : 0,
   };
 

@@ -1,48 +1,65 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getPlaces, addPlace, deletePlace, type Place } from '@/lib/actions/place-actions';
-import { SearchBoxFeature } from '@/lib/schemas/places';
+import { useEffect, useState, useTransition } from "react";
+import type { Place, SearchBoxFeature } from '@/lib/schemas/places';
+import { getPlacesAction, addPlaceAction, deletePlaceAction } from "@/app/places/place-actions";
 
 export function usePlaces() {
-  const query = useQuery<Place[]>({
-    queryKey: ['places'],
-    queryFn: getPlaces,
-  });
+  const [places, setPlaces] = useState<Place[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchPlaces = async () => {
+    setIsLoading(true);
+    const data = await getPlacesAction();
+    setPlaces(data);
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchPlaces();
+  }, []);
 
   return {
-    places: query.data ?? [],
-    isLoading: query.isLoading,
-    isError: query.isError,
+    places,
+    isLoading,
+    refetch: fetchPlaces,
+    isError: false, // You can add error handling if needed
   };
 }
 
 export function usePlaceMutations() {
-  const queryClient = useQueryClient();
+  const [isAdding, setIsAdding] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
-  const addMutation = useMutation({
-    mutationFn: ({ feature, placeName }: { feature: SearchBoxFeature; placeName: string }) => {
-      console.log('Mutation executing with feature:', feature, 'and name:', placeName);
-      return addPlace(feature, placeName);
-    },
-    onSuccess: () => {
-      console.log('Mutation succeeded, invalidating queries');
-      queryClient.invalidateQueries({ queryKey: ['places'] });
-    },
-    onError: (error) => {
-      console.error('Mutation failed:', error);
-    },
-  });
+  const addPlace = async (feature: SearchBoxFeature, placeName: string) => {
+    setIsAdding(true);
+    setError(null);
+    try {
+      await addPlaceAction(feature, placeName);
+    } catch (e) {
+      setError("Failed to add place");
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
-  const deleteMutation = useMutation({
-    mutationFn: deletePlace,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['places'] });
-    },
-  });
+  const deletePlace = async (id: string) => {
+    setIsDeleting(true);
+    setError(null);
+    try {
+      await deletePlaceAction(id);
+    } catch (e) {
+      setError("Failed to delete place");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return {
-    addPlace: addMutation.mutate,
-    deletePlace: deleteMutation.mutate,
-    isAdding: addMutation.isPending,
-    isDeleting: deleteMutation.isPending,
+    addPlace,
+    deletePlace,
+    isAdding,
+    isDeleting,
+    error,
   };
 }

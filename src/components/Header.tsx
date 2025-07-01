@@ -12,6 +12,13 @@ import {
   SheetHeader,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from "@clerk/nextjs";
 
 const links = [
   { href: "/", label: "Home", icon: Home },
@@ -93,6 +100,28 @@ export default function Header() {
                 <span className="sr-only">Toggle theme</span>
               </Button>
             )}
+
+            {/* Clerk Auth Buttons */}
+            <SignedOut>
+              <SignInButton>
+                <Button variant="outline" className="h-10 px-4">
+                  Sign In
+                </Button>
+              </SignInButton>
+              <SignUpButton>
+                <Button className="bg-[#6c47ff] text-white rounded-full font-medium text-sm sm:text-base h-10 px-4 ml-2">
+                  Sign Up
+                </Button>
+              </SignUpButton>
+            </SignedOut>
+            <SignedIn>
+              <UserButton
+                appearance={{
+                  elements: { userButtonAvatarBox: "h-10 w-10" },
+                }}
+                afterSignOutUrl="/"
+              />
+            </SignedIn>
 
             {/* Mobile Menu */}
             <Sheet>

@@ -29,7 +29,7 @@ export default function NewRoutePage() {
   const router = useRouter();
   const { toast } = useToast();
   const { isLoading: isLoadingPlaces } = usePlaces();
-  const { addRoute, isAdding } = useAddRoute();
+  const { addRoute, isPending } = useAddRoute();
   const [openStart, setOpenStart] = useState(false);
   const [openDest, setOpenDest] = useState(false);
 
@@ -176,9 +176,9 @@ export default function NewRoutePage() {
               <div className="flex justify-end space-x-4">
                 <Button
                   type="submit"
-                  disabled={isAdding || isLoadingPlaces}
+                  disabled={isPending || isLoadingPlaces}
                 >
-                  {isAdding ? "Adding..." : "Add Route"}
+                  {isPending ? "Adding..." : "Add Route"}
                 </Button>
               </div>
             </form>

@@ -28,11 +28,7 @@ export default function RouteDetailPage() {
   const { deleteRoute, isDeleting } = useRoutes();
 
   const handleDeleteRoute = async () => {
-    await deleteRoute(id, {
-      onSuccess: () => {
-        router.push("/routes");
-      }
-    });
+    await deleteRoute(id);
   };
   
   if (routeLoading || placesLoading) {
@@ -145,27 +141,6 @@ export default function RouteDetailPage() {
                   <p>{route.notes}</p>
                 </div>
               )}
-            </CardContent>
-          </Card>
-
-          {/* Statistics */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Statistics</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between items-center">
-                <p className="text-muted-foreground">Times Driven</p>
-                <p className="font-medium">{route.stats.timesDriven}</p>
-              </div>
-              <div className="flex justify-between items-center">
-                <p className="text-muted-foreground">Average Mileage</p>
-                <p className="font-medium">{formatMileage(route.stats.avgMileage)} miles</p>
-              </div>
-              <div className="flex justify-between items-center">
-                <p className="text-muted-foreground">Last Driven</p>
-                <p className="font-medium">{formatDate(route.stats.lastDriven)}</p>
-              </div>
             </CardContent>
           </Card>
         </div>

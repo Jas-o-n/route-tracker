@@ -33,9 +33,10 @@ function convertToPlace(model: PlaceModel): Place {
   return placeSchema.parse(place);
 }
 
-export async function getPlaces(): Promise<Place[]> {
+export async function getPlaces(userID: string): Promise<Place[]> {
   // Cast the result to handle decimal string conversion
   const result = await db.query.places.findMany({
+    where: (places, { eq }) => eq(places.userID, userID),
     orderBy: (places, { asc }) => [asc(places.name)],
   }) as any as PlaceModel[];
 
@@ -44,7 +45,8 @@ export async function getPlaces(): Promise<Place[]> {
 
 export async function addPlace(
   feature: SearchBoxFeature, 
-  placeName: string
+  placeName: string,
+  userID: string
 ): Promise<Place> {
   const mapboxService = new MapboxService();
 
@@ -66,7 +68,7 @@ export async function addPlace(
     // Convert numbers to SQL decimal literals
     latitude: sql`${coordinates.latitude}::decimal(10,7)`,
     longitude: sql`${coordinates.longitude}::decimal(10,7)`,
-    userID: 'default-user',
+    userID,
   };
 
   // Cast the result to handle decimal string conversion

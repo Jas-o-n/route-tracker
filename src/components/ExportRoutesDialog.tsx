@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
@@ -19,19 +19,35 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { exportRoutesAction } from "@/app/routes/export-action";
 
-interface ExportRoutesDialogProps {
-  onExport: (startDate: Date, endDate: Date) => void;
-}
-
-export function ExportRoutesDialog({ onExport }: ExportRoutesDialogProps) {
+export function ExportRoutesDialog() {
   const [isOpen, setIsOpen] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [isPending, startTransition] = useTransition();
 
   const handleExport = () => {
     if (dateRange?.from && dateRange?.to) {
-      onExport(dateRange.from, dateRange.to);
-      setIsOpen(false);
+      const formData = new FormData();
+      formData.append("startDate", dateRange.from.toISOString());
+      formData.append("endDate", dateRange.to.toISOString());
+      startTransition(async () => {
+        const csv = await exportRoutesAction(formData);
+        // Download CSV
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        const formatDate = (date: Date) => date.toLocaleDateString("en-CA");
+        link.download = `routes-${formatDate(dateRange.from!)}_to_${formatDate(
+          dateRange.to!
+        )}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+        setIsOpen(false);
+      });
     }
   };
 
@@ -78,10 +94,10 @@ export function ExportRoutesDialog({ onExport }: ExportRoutesDialogProps) {
         <DialogFooter>
           <Button
             onClick={handleExport}
-            disabled={!dateRange?.from || !dateRange?.to}
+            disabled={!dateRange?.from || !dateRange?.to || isPending}
             className="w-full"
           >
-            Export CSV
+            {isPending ? "Exporting..." : "Export CSV"}
           </Button>
         </DialogFooter>
       </DialogContent>
