@@ -39,10 +39,10 @@ export function PlaceSelect({
         <Button
           variant="outline"
           role="combobox"
-          className="w-full justify-between relative pl-10"
+          className="w-full justify-between relative pl-14"
         >
           {/* Absolutely positioned icon */}
-          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 shrink-0 text-muted-foreground pointer-events-none" />
+          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 shrink-0 text-muted-foreground pointer-events-none" />
           <div className="flex flex-col text-left w-full">
             <span className="font-medium truncate">{selectedPlace ? selectedPlace.name : placeholder}</span>
             {selectedPlace && (
