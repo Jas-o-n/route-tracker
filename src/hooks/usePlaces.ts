@@ -1,6 +1,6 @@
 import { useEffect, useState, useTransition } from "react";
 import type { Place, SearchBoxFeature } from '@/lib/schemas/places';
-import { getPlacesAction, addPlaceAction, deletePlaceAction } from "@/app/places/place-actions";
+import { getPlaces, addPlace, deletePlace } from "@/app/places/_actions/crud";
 
 export function usePlaces() {
   const [places, setPlaces] = useState<Place[]>([]);
@@ -8,7 +8,7 @@ export function usePlaces() {
 
   const fetchPlaces = async () => {
     setIsLoading(true);
-    const data = await getPlacesAction();
+    const data = await getPlaces();
     setPlaces(data);
     setIsLoading(false);
   };
@@ -30,33 +30,39 @@ export function usePlaceMutations() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const addPlace = async (feature: SearchBoxFeature, placeName: string) => {
+  const addPlaceItem = async (feature: SearchBoxFeature, placeName: string) => {
     setIsAdding(true);
     setError(null);
     try {
-      await addPlaceAction(feature, placeName);
+      const result = await addPlace(feature, placeName);
+      if (!result) throw new Error("Failed to add place");
+      return result;
     } catch (e) {
-      setError("Failed to add place");
+      setError(e instanceof Error ? e.message : "Failed to add place");
+      throw e;
     } finally {
       setIsAdding(false);
     }
   };
 
-  const deletePlace = async (id: string) => {
+  const deletePlaceItem = async (id: string) => {
     setIsDeleting(true);
     setError(null);
     try {
-      await deletePlaceAction(id);
+      const result = await deletePlace(id);
+      if (!result) throw new Error("Failed to delete place");
+      return result;
     } catch (e) {
-      setError("Failed to delete place");
+      setError(e instanceof Error ? e.message : "Failed to delete place");
+      throw e;
     } finally {
       setIsDeleting(false);
     }
   };
 
   return {
-    addPlace,
-    deletePlace,
+    addPlace: addPlaceItem,
+    deletePlace: deletePlaceItem,
     isAdding,
     isDeleting,
     error,
