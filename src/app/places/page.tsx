@@ -15,7 +15,8 @@ export default function PlacesPage() {
 
   async function handleAddPlace(feature: SearchBoxFeature, name: string) {
     try {
-      await addPlace(feature, name);
+      const result = await addPlace(feature, name);
+      if (!result) throw new Error("Failed to add place");
       await refetch();
       toast({ title: "Success", description: "Place added successfully" });
     } catch (error) {
@@ -24,18 +25,20 @@ export default function PlacesPage() {
         description: error instanceof Error ? error.message : "Failed to add place",
         variant: "destructive",
       });
+      throw error; // Re-throw to prevent form reset
     }
   }
 
   async function handleDeletePlace(id: string) {
     try {
-      await deletePlace(id);
+      const result = await deletePlace(id);
+      if (!result) throw new Error("Failed to delete place");
       await refetch();
       toast({ title: "Success", description: "Place deleted successfully" });
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to delete place. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to delete place",
         variant: "destructive",
       });
     }

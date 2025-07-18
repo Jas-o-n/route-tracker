@@ -19,7 +19,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { exportRoutesAction } from "@/app/routes/export-action";
+import { getRoutesForExport } from "@/app/routes/_actions/export";
 
 export function ExportRoutesDialog() {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,7 +32,7 @@ export function ExportRoutesDialog() {
       formData.append("startDate", dateRange.from.toISOString());
       formData.append("endDate", dateRange.to.toISOString());
       startTransition(async () => {
-        const csv = await exportRoutesAction(formData);
+        const csv = await getRoutesForExport(formData);
         // Download CSV
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
         const blobUrl = URL.createObjectURL(blob);

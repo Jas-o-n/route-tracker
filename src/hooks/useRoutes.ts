@@ -1,8 +1,8 @@
 import { useEffect, useState, useTransition } from "react";
 import type { Route, RouteFormData, RouteStats } from '@/lib/schemas/routes';
-import { getAllRoutesAction, deleteRouteAction, createRouteAction, getRouteByIdAction, updateRouteAction } from "@/app/routes/route-actions";
-import { getRouteStatsAction } from "@/app/routes/route-stats-action";
-import { getRecentRoutesAction } from "@/app/routes/recent-routes-action";
+import { getAllRoutes, deleteRoute as deleteRouteServer, createRoute, getRouteById, updateRoute } from "@/app/routes/_actions/crud";
+import { getRouteStats } from "@/app/routes/_actions/stats";
+import { getRecentRoutes } from "@/app/routes/_actions/recent";
 
 export function useRoutes() {
   const [routes, setRoutes] = useState<Route[]>([]);
@@ -13,7 +13,7 @@ export function useRoutes() {
 
   useEffect(() => {
     setIsLoading(true);
-    getAllRoutesAction().then((data) => {
+    getAllRoutes().then((data: Route[]) => {
       setRoutes(data);
       setIsLoading(false);
     });
@@ -23,9 +23,9 @@ export function useRoutes() {
     setIsDeleting(true);
     setDeletingId(id);
     try {
-      await deleteRouteAction(id);
+      await deleteRouteServer(id);
       // Refresh routes after deletion
-      const data = await getAllRoutesAction();
+      const data = await getAllRoutes();
       setRoutes(data);
     } catch (error) {
       // Log or handle the error as needed
@@ -53,7 +53,7 @@ export function useAddRoute() {
     setError(null);
     startTransition(async () => {
       try {
-        await createRouteAction(data);
+        await createRoute(data);
       } catch (e) {
         setError("Failed to add route");
       }
@@ -69,7 +69,7 @@ export function useRouteStats() {
 
   useEffect(() => {
     setIsLoading(true);
-    getRouteStatsAction().then((stats) => {
+    getRouteStats().then((stats: RouteStats) => {
       setData(stats);
       setIsLoading(false);
     });
@@ -84,7 +84,7 @@ export function useRecentRoutes(limit = 3) {
 
   useEffect(() => {
     setIsLoading(true);
-    getRecentRoutesAction(limit).then((routes) => {
+    getRecentRoutes(limit).then((routes: Route[]) => {
       setData(routes);
       setIsLoading(false);
     });
@@ -101,8 +101,8 @@ export function useRoute(id: string) {
   useEffect(() => {
     setIsLoading(true);
     setIsError(false);
-    getRouteByIdAction(id)
-      .then((route) => {
+    getRouteById(id)
+      .then((route: Route | null) => {
         setData(route);
         setIsLoading(false);
       })
@@ -119,16 +119,16 @@ export function useEditRoute(id: string) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const updateRoute = async (data: Partial<RouteFormData>) => {
+  const updateRouteData = async (data: Partial<RouteFormData>) => {
     setIsUpdating(true);
     setError(null);
     try {
-      await updateRouteAction(id, data);
+      await updateRoute(id, data);
     } catch (e) {
       setError("Failed to update route");
     } finally {
       setIsUpdating(false);
     }
   };
-  return { updateRoute, isUpdating, error };
+  return { updateRoute: updateRouteData, isUpdating, error };
 }

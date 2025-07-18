@@ -3,10 +3,10 @@ import { MoveRight } from 'lucide-react';
 import RouteStatsPreview from '@/components/RouteStatsPreview';
 import RecentRoutes from '@/components/RecentRoutes';
 import { Button } from '@/components/ui/button';
-import { getInitialRouteStats } from '@/lib/server/route-service';
+import { getRouteStats } from '@/app/routes/_actions/stats';
 
 export default async function Home() {
-  const initialStats = await getInitialRouteStats();
+  const initialStats = await getRouteStats();
 
   return (
     <main className="flex min-h-screen flex-col">
