@@ -1,6 +1,6 @@
 import { useEffect, useState, useTransition } from "react";
 import type { Place, SearchBoxFeature } from '@/lib/schemas/places';
-import { getPlaces, addPlace, deletePlace } from "@/app/places/_actions/crud";
+import { getPlaces, addPlace, deletePlace } from "@/app/(main)/places/_actions/crud";
 
 export function usePlaces() {
   const [places, setPlaces] = useState<Place[]>([]);
