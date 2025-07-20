@@ -12,16 +12,10 @@ import {
   SheetHeader,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from "@clerk/nextjs";
+import { SignedIn, UserButton } from "@clerk/nextjs";
 
 const links = [
-  { href: "/", label: "Home", icon: Home },
+  { href: "/dashboard", label: "Home", icon: Home },
   { href: "/routes", label: "Routes", icon: MapPin },
   { href: "/routes/new", label: "Add Route", icon: Plus },
   { href: "/places", label: "Places", icon: MapPin },
@@ -55,7 +49,7 @@ export default function Header() {
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/dashboard" className="flex items-center gap-2">
               <div className="rounded-md bg-primary/10 p-1">
                 <MapPin className="h-5 w-5 text-primary" />
               </div>
@@ -101,19 +95,7 @@ export default function Header() {
               </Button>
             )}
 
-            {/* Clerk Auth Buttons */}
-            <SignedOut>
-              <SignInButton>
-                <Button variant="outline" className="h-10 px-4">
-                  Sign In
-                </Button>
-              </SignInButton>
-              <SignUpButton>
-                <Button className="bg-[#6c47ff] text-white rounded-full font-medium text-sm sm:text-base h-10 px-4 ml-2">
-                  Sign Up
-                </Button>
-              </SignUpButton>
-            </SignedOut>
+            {/* User Button for Signed-In Users */}
             <SignedIn>
               <UserButton
                 appearance={{

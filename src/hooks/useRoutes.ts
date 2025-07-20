@@ -1,8 +1,8 @@
 import { useEffect, useState, useTransition } from "react";
 import type { Route, RouteFormData, RouteStats } from '@/lib/schemas/routes';
-import { getAllRoutes, deleteRoute as deleteRouteServer, createRoute, getRouteById, updateRoute } from "@/app/routes/_actions/crud";
-import { getRouteStats } from "@/app/routes/_actions/stats";
-import { getRecentRoutes } from "@/app/routes/_actions/recent";
+import { getAllRoutes, deleteRoute as deleteRouteServer, createRoute, getRouteById, updateRoute } from "@/app/(main)/routes/_actions/crud";
+import { getRouteStats } from "@/app/(main)/routes/_actions/stats";
+import { getRecentRoutes } from "@/app/(main)/routes/_actions/recent";
 
 export function useRoutes() {
   const [routes, setRoutes] = useState<Route[]>([]);

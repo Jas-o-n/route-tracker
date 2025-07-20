@@ -19,7 +19,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { getRoutesForExport } from "@/app/routes/_actions/export";
+import { getRoutesForExport } from "@/app/(main)/routes/_actions/export";
 
 export function ExportRoutesDialog() {
   const [isOpen, setIsOpen] = useState(false);
