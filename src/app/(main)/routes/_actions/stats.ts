@@ -22,7 +22,7 @@ export async function getRouteStats(): Promise<RouteStats> {
     orderBy: [desc(routes.date)],
   });
 
-  const totalMiles = allRoutes.reduce((sum, r) => sum + (r.distance || 0), 0);
+  const totalKilometers = allRoutes.reduce((sum, r) => sum + (r.distance || 0), 0);
   
   // Find most frequent route
   const routeCounts: Record<string, { 
@@ -71,9 +71,9 @@ export async function getRouteStats(): Promise<RouteStats> {
 
   const stats = {
     totalRoutes: allRoutes.length,
-    totalMiles,
+    totalKilometers,
     mostFrequentRoute,
-    avgMileagePerRoute: allRoutes.length ? totalMiles / allRoutes.length : 0,
+    avgMileagePerRoute: allRoutes.length ? totalKilometers / allRoutes.length : 0,
   };
 
   return routeStatsSchema.parse(stats);

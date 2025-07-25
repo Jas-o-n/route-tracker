@@ -42,11 +42,11 @@ export default function RoutesList({ searchQuery, sortBy }: RoutesListProps) {
           return new Date(b.date).getTime() - new Date(a.date).getTime();
         case "date-asc":
           return new Date(a.date).getTime() - new Date(b.date).getTime();
-        case "miles-desc":
+        case "kilometer-desc":
           return (
             b.endMileage - b.startMileage - (a.endMileage - a.startMileage)
           );
-        case "miles-asc":
+        case "kilometer-asc":
           return (
             a.endMileage - a.startMileage - (b.endMileage - b.startMileage)
           );
@@ -119,7 +119,7 @@ export default function RoutesList({ searchQuery, sortBy }: RoutesListProps) {
                   <div className="flex items-center justify-between md:justify-start">
                     <div className="flex items-center">
                       <Badge variant="outline" className="mr-2">
-                        {mileage} miles
+                        {mileage} km
                       </Badge>
                     </div>
                     <div className="flex items-center text-sm text-muted-foreground">

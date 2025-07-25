@@ -89,7 +89,7 @@ export default function RouteMap({ fromPlace, toPlace, mileage }: RouteMapProps)
     // Add mileage label
     const mileageLabel = document.createElement("div");
     mileageLabel.className = "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 px-3 py-1 bg-background rounded-full shadow-md text-sm font-medium";
-    mileageLabel.textContent = `${mileage?.toLocaleString() ?? 0} miles`;
+    mileageLabel.textContent = `${mileage?.toLocaleString() ?? 0} km`;
     mapContainer.appendChild(mileageLabel);
     
     mapContainerRef.current.appendChild(mapContainer);
