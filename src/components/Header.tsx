@@ -50,7 +50,7 @@ export default function Header() {
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
             <Link href="/dashboard" className="flex items-center gap-2">
-              <div className="rounded-md bg-primary/10 p-1">
+              <div className="rounded-md p-1">
                 <MapPin className="h-5 w-5 text-primary" />
               </div>
               <span className="text-lg font-bold">RouteTracker</span>

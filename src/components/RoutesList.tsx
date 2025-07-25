@@ -102,7 +102,7 @@ export default function RoutesList({ searchQuery, sortBy }: RoutesListProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {filteredRoutes.map((route) => {
         const fromPlace = places.find((p) => p.id === route.fromPlaceId);
         const toPlace = places.find((p) => p.id === route.toPlaceId);
@@ -111,53 +111,31 @@ export default function RoutesList({ searchQuery, sortBy }: RoutesListProps) {
         return (
           <Card
             key={route.id}
-            className="group hover:shadow-md transition-shadow"
+            className="flex flex-col justify-between h-full rounded-2xl shadow-md border border-muted bg-background/80 p-6 relative"
           >
-            <CardContent className="p-4 md:p-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between md:justify-start">
-                    <div className="flex items-center">
-                      <Badge variant="outline" className="mr-2">
-                        {mileage} km
-                      </Badge>
-                    </div>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {formatDate(route.date)}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
-                    <div className="flex items-start">
-                      <MapPin className="h-4 w-4 mr-2 text-muted-foreground shrink-0 mt-0.5" />
-                      <div>
-                        <div className="text-xs text-muted-foreground">From</div>
-                        <div className="font-medium">{fromPlace?.name}</div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start">
-                      <MapPin className="h-4 w-4 mr-2 text-primary shrink-0 mt-0.5" />
-                      <div>
-                        <div className="text-xs text-muted-foreground">To</div>
-                        <div className="font-medium">{toPlace?.name}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 md:mt-0 flex items-center justify-between md:space-x-2">
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link href={`/routes/${route.id}`}>View Details</Link>
-                  </Button>
-                  <DeleteButton
-                    onDelete={() => deleteRoute(route.id)}
-                    isDeleting={isDeleting}
-                  />
-                </div>
+            <div className="absolute top-3 right-3 z-10">
+              <DeleteButton
+                onDelete={() => deleteRoute(route.id)}
+                isDeleting={isDeleting}
+              />
+            </div>
+            <div>
+              <div className="text-2xl font-bold mb-2">{mileage} km</div>
+              <div className="flex items-center text-base font-medium mb-4 flex-wrap min-w-0">
+                <span className="text-primary font-semibold mr-2 truncate max-w-[6rem] min-w-0">{fromPlace?.name}</span>
+                <span className="mx-1 text-xl text-muted-foreground shrink-0">→</span>
+                <span className="flex items-center text-muted-foreground mr-2 min-w-0">
+                  <span className="sr-only">To</span>
+                </span>
+                <span className="text-primary font-semibold truncate max-w-[6rem] min-w-0">{toPlace?.name}</span>
               </div>
-            </CardContent>
+            </div>
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-muted-foreground text-lg">{formatDate(route.date)}</div>
+              <Button variant="outline" size="lg" className="text-lg font-semibold px-6 py-2" asChild>
+                <Link href={`/routes/${route.id}`}>View Details</Link>
+              </Button>
+            </div>
           </Card>
         );
       })}
