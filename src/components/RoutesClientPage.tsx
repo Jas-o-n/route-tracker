@@ -52,8 +52,8 @@ export default function RoutesClientPage() {
             <SelectContent>
               <SelectItem value="date-desc">Newest First</SelectItem>
               <SelectItem value="date-asc">Oldest First</SelectItem>
-              <SelectItem value="miles-desc">Highest Mileage</SelectItem>
-              <SelectItem value="miles-asc">Lowest Mileage</SelectItem>
+              <SelectItem value="kilometer-desc">Highest Mileage</SelectItem>
+              <SelectItem value="kilometer-asc">Lowest Mileage</SelectItem>
             </SelectContent>
           </Select>
         </div>

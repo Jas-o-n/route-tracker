@@ -122,16 +122,16 @@ export default function RouteDetailPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Start</p>
-                    <p className="font-medium">{formatMileage(route.startMileage)} miles</p>
+                    <p className="font-medium">{formatMileage(route.startMileage)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">End</p>
-                    <p className="font-medium">{formatMileage(route.endMileage)} miles</p>
+                    <p className="font-medium">{formatMileage(route.endMileage)}</p>
                   </div>
                 </div>
                 <div className="mt-2">
                   <Badge variant="secondary">
-                    {formatMileage(mileage)} miles total
+                    {formatMileage(mileage)} km total
                   </Badge>
                 </div>
               </div>

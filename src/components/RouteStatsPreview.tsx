@@ -49,8 +49,8 @@ export default function RouteStatsPreview({ initialStats }: RouteStatsPreviewPro
       bgColor: "bg-blue-50 dark:bg-blue-950",
     },
     {
-      title: "Total Miles",
-      value: `${currentStats.totalMiles.toLocaleString()} mi`,
+      title: "Total Kilometers",
+      value: `${currentStats.totalKilometers.toLocaleString()} km`,
       icon: <Car className="h-6 w-6" />,
       color: "text-teal-500",
       bgColor: "bg-teal-50 dark:bg-teal-950",
@@ -66,8 +66,8 @@ export default function RouteStatsPreview({ initialStats }: RouteStatsPreviewPro
       bgColor: "bg-orange-50 dark:bg-orange-950",
     },
     {
-      title: "Avg. Miles per Route",
-      value: `${currentStats.avgMileagePerRoute.toFixed(1)} mi`,
+      title: "Avg. Kilometers per Route",
+      value: `${currentStats.avgMileagePerRoute.toFixed(1)} km`,
       icon: <TrendingUp className="h-6 w-6" />,
       color: "text-purple-500",
       bgColor: "bg-purple-50 dark:bg-purple-950",

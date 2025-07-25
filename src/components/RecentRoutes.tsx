@@ -58,7 +58,7 @@ export default function RecentRoutes() {
             <CardContent className="px-6 pt-6 pb-4">
               <div className="flex justify-between items-start mb-4">
                 <Badge variant="outline" className="text-xs">
-                  {mileage} miles
+                  {mileage} km
                 </Badge>
                 <div className="flex items-center text-xs text-muted-foreground">
                   <Calendar className="h-3 w-3 mr-1" />
