@@ -26,6 +26,7 @@ export default function Header() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [isMounted, setIsMounted] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false); // NEW: Sheet open state
 
   useEffect(() => {
     setIsMounted(true);
@@ -106,7 +107,7 @@ export default function Header() {
             </SignedIn>
 
             {/* Mobile Menu */}
-            <Sheet>
+            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
               <SheetTrigger asChild className="md:hidden">
                 <Button variant="ghost" size="icon">
                   <Menu className="h-5 w-5" />
@@ -134,6 +135,7 @@ export default function Header() {
                             ? "font-medium text-primary"
                             : "text-muted-foreground"
                         }`}
+                        onClick={() => setIsSheetOpen(false)} // NEW: close Sheet on link click
                       >
                         <Icon className="h-4 w-4" />
                         {link.label}

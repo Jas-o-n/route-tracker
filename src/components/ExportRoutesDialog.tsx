@@ -20,6 +20,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { getRoutesForExport } from "@/app/(main)/routes/_actions/export";
+import { useMediaQuery } from "@uidotdev/usehooks";
 
 export function ExportRoutesDialog() {
   const [isOpen, setIsOpen] = useState(false);
@@ -51,6 +52,8 @@ export function ExportRoutesDialog() {
     }
   };
 
+  const isMobile = useMediaQuery("(max-width: 639px)");
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -78,13 +81,17 @@ export function ExportRoutesDialog() {
                 <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
+            <PopoverContent
+              className="w-full max-w-[95vw] sm:max-w-lg max-h-[80vh] overflow-y-auto p-0"
+              align="start"
+              aria-label="Select date range calendar"
+            >
               <Calendar
                 autoFocus
                 mode="range"
                 selected={dateRange}
                 onSelect={setDateRange}
-                numberOfMonths={2}
+                numberOfMonths={isMobile ? 1 : 2}
                 disabled={(date) => date > new Date()}
                 captionLayout="dropdown"
               />
