@@ -13,7 +13,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { usePlaces } from "@/hooks/usePlaces";
+import type { Place } from "@/lib/schemas/places";
 
 interface PlaceSelectProps {
   value: string; // This will be the UUID
@@ -21,6 +21,7 @@ interface PlaceSelectProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   placeholder?: string;
+  places: Place[]; // Now required
 }
 
 export function PlaceSelect({
@@ -29,9 +30,9 @@ export function PlaceSelect({
   open,
   onOpenChange,
   placeholder = "Select place",
+  places,
 }: PlaceSelectProps) {
-  const { places } = usePlaces();
-  const selectedPlace = places.find(place => place.id === value);
+  const selectedPlace = places.find((place: Place) => place.id === value);
 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
@@ -58,7 +59,7 @@ export function PlaceSelect({
           <CommandInput placeholder="Search places..." />
           <CommandEmpty>No place found.</CommandEmpty>
           <CommandGroup>
-            {places.map((place) => (
+            {places.map((place: Place) => (
               <CommandItem
                 key={place.id}
                 onSelect={() => {

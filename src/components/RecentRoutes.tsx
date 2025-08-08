@@ -1,39 +1,16 @@
-"use client";
-
 import Link from "next/link";
 import { ArrowRight, Calendar, MapPin } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useRecentRoutes } from "@/hooks/useRoutes";
-import { usePlaces } from "@/hooks/usePlaces";
 import { formatDate } from "@/lib/utils";
+import { getRecentRoutes, getPlaces } from "@/lib/db/queries";
 
-export default function RecentRoutes() {
-  const { data: routes, isLoading } = useRecentRoutes();
-  const { places } = usePlaces();
-
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(3)].map((_, i) => (
-          <Card key={i} className="overflow-hidden">
-            <CardContent className="p-0">
-              <div className="h-48 bg-muted"></div>
-            </CardContent>
-            <CardContent className="p-6">
-              <Skeleton className="h-6 w-3/4 mb-4" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-2/3" />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
+export default async function RecentRoutes() {
+  const [routes, places] = await Promise.all([
+    getRecentRoutes(3),
+    getPlaces(),
+  ]);
 
   if (!routes?.length) {
     return (

@@ -1,70 +1,45 @@
-import { useEffect, useState, useTransition } from "react";
-import type { Place, SearchBoxFeature } from '@/lib/schemas/places';
-import { getPlaces, addPlace, deletePlace } from "@/app/(main)/places/_actions/crud";
+import { useState } from "react";
+import type { SearchBoxFeature } from '@/lib/schemas/places';
+import { addPlace, deletePlace } from "@/app/(main)/places/_actions/crud";
 
-export function usePlaces() {
-  const [places, setPlaces] = useState<Place[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchPlaces = async () => {
-    setIsLoading(true);
-    const data = await getPlaces();
-    setPlaces(data);
-    setIsLoading(false);
-  };
-
-  useEffect(() => {
-    fetchPlaces();
-  }, []);
-
-  return {
-    places,
-    isLoading,
-    refetch: fetchPlaces,
-    isError: false, // You can add error handling if needed
-  };
-}
-
-export function usePlaceMutations() {
+export function useAddPlace(onSuccess?: () => void, onError?: (err: Error) => void) {
   const [isAdding, setIsAdding] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const addPlaceItem = async (feature: SearchBoxFeature, placeName: string) => {
     setIsAdding(true);
     setError(null);
     try {
-      const result = await addPlace(feature, placeName);
-      if (!result) throw new Error("Failed to add place");
-      return result;
+      await addPlace(feature, placeName);
+      onSuccess?.();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to add place");
-      throw e;
+      setError("Failed to add place");
+      onError?.(e as Error);
     } finally {
       setIsAdding(false);
     }
   };
 
+  return { addPlace: addPlaceItem, isAdding, error };
+}
+
+export function useDeletePlace(onSuccess?: () => void, onError?: (err: Error) => void) {
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const deletePlaceItem = async (id: string) => {
     setIsDeleting(true);
     setError(null);
     try {
-      const result = await deletePlace(id);
-      if (!result) throw new Error("Failed to delete place");
-      return result;
+      await deletePlace(id);
+      onSuccess?.();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to delete place");
-      throw e;
+      setError("Failed to delete place");
+      onError?.(e as Error);
     } finally {
       setIsDeleting(false);
     }
   };
 
-  return {
-    addPlace: addPlaceItem,
-    deletePlace: deletePlaceItem,
-    isAdding,
-    isDeleting,
-    error,
-  };
+  return { deletePlace: deletePlaceItem, isDeleting, error };
 }
