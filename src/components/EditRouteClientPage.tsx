@@ -31,12 +31,40 @@ import { useToast } from "@/hooks/use-toast";
 import type { Route } from "@/lib/schemas/routes";
 import type { Place } from "@/lib/schemas/places";
 
+function isYYYYMMDD(dateString: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(dateString);
+}
+
+function parseYMDToLocalDate(dateString: string): Date | null {
+  if (!isYYYYMMDD(dateString)) return null;
+  const [yearStr, monthStr, dayStr] = dateString.split("-");
+  const year = Number(yearStr);
+  const monthIndex = Number(monthStr) - 1;
+  const day = Number(dayStr);
+  return new Date(year, monthIndex, day);
+}
+
 const formSchema = z.object({
   fromPlaceId: z.string().uuid(),
   toPlaceId: z.string().uuid(),
   startMileage: z.coerce.number().nonnegative(),
   endMileage: z.coerce.number().nonnegative(),
-  date: z.string(),
+  date: z
+    .string()
+    .min(1, "Date is required")
+    .refine((value) => isYYYYMMDD(value), {
+      message: "Invalid date format. Use YYYY-MM-DD",
+    })
+    .refine((value) => {
+      const parsed = parseYMDToLocalDate(value);
+      if (!parsed) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      parsed.setHours(0, 0, 0, 0);
+      return parsed.getTime() <= today.getTime();
+    }, {
+      message: "Date cannot be in the future",
+    }),
   notes: z.string().optional(),
 }).refine(
   (data) => data.endMileage >= data.startMileage,
@@ -71,7 +99,17 @@ export default function EditRouteClientPage({ route, places }: Props) {
       toPlaceId: route.toPlaceId,
       startMileage: route.startMileage,
       endMileage: route.endMileage,
-      date: route.date ? new Date(route.date).toISOString().split("T")[0] : "",
+      date: route.date
+        ? (isYYYYMMDD(route.date)
+            ? route.date
+            : (() => {
+                const d = new Date(route.date);
+                return isNaN(d.getTime())
+                  ? ""
+                  : d.toLocaleDateString('sv-SE'); // yyyy-mm-dd without timezone shift
+              })()
+          )
+        : "",
       notes: route.notes ?? "",
     },
   });
@@ -152,7 +190,7 @@ export default function EditRouteClientPage({ route, places }: Props) {
                           type="number"
                           placeholder="Enter start mileage"
                           {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          onChange={(e) => field.onChange(e.target.valueAsNumber)}
                         />
                       </FormControl>
                       <FormMessage />
@@ -171,7 +209,7 @@ export default function EditRouteClientPage({ route, places }: Props) {
                           type="number"
                           placeholder="Enter end mileage"
                           {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          onChange={(e) => field.onChange(e.target.valueAsNumber)}
                         />
                       </FormControl>
                       <FormMessage />
@@ -195,7 +233,14 @@ export default function EditRouteClientPage({ route, places }: Props) {
                             className="w-full justify-start font-normal"
                           >
                             {field.value ? (
-                              new Date(field.value).toLocaleDateString()
+                              (() => {
+                                if (isYYYYMMDD(field.value)) {
+                                  const d = parseYMDToLocalDate(field.value);
+                                  return d ? d.toLocaleDateString() : field.value;
+                                }
+                                const d = new Date(field.value);
+                                return isNaN(d.getTime()) ? field.value : d.toLocaleDateString();
+                              })()
                             ) : (
                               "Select date"
                             )}
@@ -205,7 +250,11 @@ export default function EditRouteClientPage({ route, places }: Props) {
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="single"
-                          selected={field.value ? new Date(field.value) : undefined}
+                          selected={field.value
+                            ? (isYYYYMMDD(field.value)
+                                ? parseYMDToLocalDate(field.value) ?? undefined
+                                : new Date(field.value))
+                            : undefined}
                           onSelect={(date) => {
                             if (date) {
                               const year = date.getFullYear();

@@ -134,8 +134,8 @@ export default function NewRouteClientPage({ places }: NewRouteClientPageProps) 
                         <Input
                           type="number"
                           {...field}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value) || 0)
+                           onChange={(e) =>
+                            field.onChange(e.target.valueAsNumber)
                           }
                         />
                       </FormControl>
@@ -154,8 +154,8 @@ export default function NewRouteClientPage({ places }: NewRouteClientPageProps) 
                         <Input
                           type="number"
                           {...field}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value) || 0)
+                           onChange={(e) =>
+                            field.onChange(e.target.valueAsNumber)
                           }
                         />
                       </FormControl>

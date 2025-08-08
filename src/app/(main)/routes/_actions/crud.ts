@@ -14,7 +14,23 @@ import {
   routeModelSchema,
 } from "@/lib/schemas/routes";
 
-export async function createRoute(data: RouteFormData) {
+function convertModelToRoute(model: RouteModel): Route {
+  return {
+    id: model.id,
+    fromPlaceId: model.fromPlaceId,
+    toPlaceId: model.toPlaceId,
+    startMileage: model.startMileage,
+    endMileage: model.endMileage,
+    distance: model.distance,
+    date: model.date.toISOString(),
+    notes: model.notes,
+    userID: model.userID,
+    createdAt: model.createdAt.toISOString(),
+    updatedAt: model.updatedAt.toISOString(),
+  };
+}
+
+export async function createRoute(data: RouteFormData): Promise<Route> {
   const { userId } = await auth();
   if (!userId) throw new Error("Not authenticated");
 
@@ -31,10 +47,11 @@ export async function createRoute(data: RouteFormData) {
     .returning();
 
   revalidatePath("/routes");
-  return routeModelSchema.parse(newRoute);
+  const validated = routeModelSchema.parse(newRoute);
+  return convertModelToRoute(validated);
 }
 
-export async function updateRoute(id: string, data: Partial<RouteFormData>) {
+export async function updateRoute(id: string, data: Partial<RouteFormData>): Promise<Route> {
   const { userId } = await auth();
   if (!userId) throw new Error("Not authenticated");
 
@@ -68,7 +85,8 @@ export async function updateRoute(id: string, data: Partial<RouteFormData>) {
 
   revalidatePath("/routes");
   revalidatePath(`/routes/${id}`);
-  return routeModelSchema.parse(updatedRoute);
+  const validated = routeModelSchema.parse(updatedRoute);
+  return convertModelToRoute(validated);
 }
 
 export async function deleteRoute(id: string) {

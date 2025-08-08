@@ -34,7 +34,12 @@ export default function RouteDetailClientPage({ route, places }: Props) {
 
   const fromPlace = places.find(p => p.id === route.fromPlaceId);
   const toPlace = places.find(p => p.id === route.toPlaceId);
-  const mileage = route.endMileage - route.startMileage;
+  const start = route.startMileage;
+  const end = route.endMileage;
+  const mileage =
+    typeof start === "number" && !isNaN(start) && typeof end === "number" && !isNaN(end)
+      ? Math.max(0, end - start)
+      : undefined;
 
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 space-y-6">

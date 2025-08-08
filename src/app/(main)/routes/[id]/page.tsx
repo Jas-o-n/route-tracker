@@ -3,10 +3,12 @@ import RouteDetailClientPage from "@/components/RouteDetailClientPage";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-export default async function RouteDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const route = await getRouteById(id);
-  const places = await getPlaces();
+export default async function RouteDetailPage({ params }: { params: { id: string } }) {
+  const { id } = params;
+  const [route, places] = await Promise.all([
+    getRouteById(id),
+    getPlaces(),
+  ]);
 
   if (!route) {
     return (

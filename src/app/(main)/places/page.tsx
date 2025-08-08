@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getPlaces } from "@/lib/db/queries";
 import PlacesClientPage from "@/components/PlacesClientPage";
 

@@ -38,11 +38,10 @@ function convertToPlace(model: PlaceModel): Place {
     postcode: model.postcode || undefined,
     country: model.country || undefined,
     // Convert string decimals to numbers
-    latitude: parseFloat(model.latitude.toString()),
-    longitude: parseFloat(model.longitude.toString()),
+    latitude: model.latitude == null ? undefined : Number(model.latitude),
+    longitude: model.longitude == null ? undefined : Number(model.longitude),
     createdAt: model.createdAt.toISOString(),
-    updatedAt: model.updatedAt.toISOString(),
-    address: model.full_address || '',
+    updatedAt: model.updatedAt.toISOString(),    address: model.full_address || '',
     displayName: model.name || '',
     shortAddress: model.addressLine1 || '',
   };
@@ -86,26 +85,17 @@ export async function getRouteById(id: string) {
   const validatedSimilarRoutes = similarRoutes.map(route => routeModelSchema.parse(route));
   const allRoutes = [validatedRoute, ...validatedSimilarRoutes];
   
-  const baseRoute = {
-    id: validatedRoute.id,
-    fromPlaceId: validatedRoute.fromPlaceId,
-    toPlaceId: validatedRoute.toPlaceId,
-    startMileage: validatedRoute.startMileage,
-    endMileage: validatedRoute.endMileage,
-    distance: validatedRoute.endMileage - validatedRoute.startMileage,
-    date: validatedRoute.date.toISOString(),
-    notes: validatedRoute.notes,
-    userID: validatedRoute.userID,
-    createdAt: validatedRoute.createdAt.toISOString(),
-    updatedAt: validatedRoute.updatedAt.toISOString(),
-  };
+  const baseRoute = convertToRoute(validatedRoute);
 
   const routeWithStats = {
     ...baseRoute,
     stats: {
       timesDriven: allRoutes.length,
       avgMileage: allRoutes.reduce((sum, similarRoute) => sum + (similarRoute.endMileage - similarRoute.startMileage), 0) / allRoutes.length,
-      lastDriven: validatedRoute.date.toISOString(),
+      lastDriven: allRoutes
+        .map((route) => route.date)
+        .reduce((latest, current) => (current > latest ? current : latest), allRoutes[0].date)
+        .toISOString(),
     },
   };
 

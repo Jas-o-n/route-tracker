@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import type { SearchBoxFeature } from '@/lib/schemas/places';
 import { addPlace, deletePlace } from "@/app/(main)/places/_actions/crud";
 
@@ -24,22 +24,32 @@ export function useAddPlace(onSuccess?: () => void, onError?: (err: Error) => vo
 }
 
 export function useDeletePlace(onSuccess?: () => void, onError?: (err: Error) => void) {
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
-  const deletePlaceItem = async (id: string) => {
-    setIsDeleting(true);
+  const deletePlaceItem = useCallback(async (id: string) => {
     setError(null);
+    setDeletingIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
     try {
       await deletePlace(id);
       onSuccess?.();
     } catch (e) {
-      setError("Failed to delete place");
+      const message = e instanceof Error ? e.message : String(e);
+      setError(message);
       onError?.(e as Error);
     } finally {
-      setIsDeleting(false);
+      setDeletingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
-  };
+  }, [onSuccess, onError]);
 
+  const isDeleting = deletingIds.size > 0;
   return { deletePlace: deletePlaceItem, isDeleting, error };
 }

@@ -22,7 +22,6 @@ export default function RoutesList({ routes, places, searchQuery, sortBy }: Rout
   // Create a Map for O(1) place lookups
   const placesMap = new Map(places.map(place => [place.id, place]));
 
-  const [localRoutes, setLocalRoutes] = useState(routes);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const router = useRouter();
   const { deleteRoute, isDeleting } = useDeleteRoute(
@@ -34,7 +33,7 @@ export default function RoutesList({ routes, places, searchQuery, sortBy }: Rout
   );
 
   // Filter and sort routes
-  const filteredRoutes = localRoutes
+  const filteredRoutes = routes
     .filter((route) => {
       if (!searchQuery) return true;
       const search = searchQuery.toLowerCase();
