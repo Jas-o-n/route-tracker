@@ -7,12 +7,9 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import {
   placeSchema,
-  placeModelSchema,
-  searchBoxFeatureSchema,
   type Place,
   type PlaceModel,
   type SearchBoxFeature,
-  type Coordinates,
 } from "@/lib/schemas/places";
 import { MapboxService } from "@/lib/services/mapbox-service";
 
@@ -94,9 +91,22 @@ export async function deletePlace(id: string): Promise<boolean> {
   const { userId } = await auth();
   if (!userId) throw new Error("Not authenticated");
 
-  const result = await db.delete(places)
-    .where(and(eq(places.id, id), eq(places.userID, userId)))
-    .returning();
+  let result: unknown[] = [];
+  try {
+    result = await db
+      .delete(places)
+      .where(and(eq(places.id, id), eq(places.userID, userId)))
+      .returning();
+  } catch (error) {
+    const code = (error as any)?.code as string | undefined;
+    const message = (error as Error)?.message || "";
+    if (code === "23503" || /foreign key/i.test(message)) {
+      throw new Error(
+        "Cannot delete this place because it is used by one or more routes."
+      );
+    }
+    throw error;
+  }
   
   revalidatePath("/places");
   revalidatePath("/routes");

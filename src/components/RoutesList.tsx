@@ -1,27 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import { Calendar, MapPin, ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/utils";
 import { DeleteButton } from "@/components/DeleteButton";
-import { useRoutes } from "@/hooks/useRoutes";
-import { usePlaces } from "@/hooks/usePlaces";
+import { type Route } from "@/lib/schemas/routes";
+import { type Place } from "@/lib/schemas/places";
+import { useDeleteRoute } from "@/hooks/useRoutes";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface RoutesListProps {
+  routes: Route[];
+  places: Place[];
   searchQuery: string;
   sortBy: string;
 }
 
-export default function RoutesList({ searchQuery, sortBy }: RoutesListProps) {
-  const { routes, isLoading, deleteRoute, isDeleting } = useRoutes();
-  const { places } = usePlaces();
-
+export default function RoutesList({ routes, places, searchQuery, sortBy }: RoutesListProps) {
   // Create a Map for O(1) place lookups
   const placesMap = new Map(places.map(place => [place.id, place]));
+
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const router = useRouter();
+  const { deleteRoute, isDeleting } = useDeleteRoute(
+    () => {
+      router.refresh();
+      setDeletingId(null);
+    },
+    () => setDeletingId(null)
+  );
 
   // Filter and sort routes
   const filteredRoutes = routes
@@ -54,31 +63,6 @@ export default function RoutesList({ searchQuery, sortBy }: RoutesListProps) {
           return new Date(b.date).getTime() - new Date(a.date).getTime();
       }
     });
-
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        {[...Array(5)].map((_, i) => (
-          <Card key={i}>
-            <CardContent className="p-4 md:p-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                <div className="space-y-4 md:w-2/3">
-                  <Skeleton className="h-5 w-48" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-2/3" />
-                  </div>
-                </div>
-                <div className="mt-4 md:mt-0 flex items-center justify-between md:w-1/3 md:justify-end">
-                  <Skeleton className="h-9 w-24" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
 
   if (!routes?.length) {
     return (
@@ -115,8 +99,11 @@ export default function RoutesList({ searchQuery, sortBy }: RoutesListProps) {
           >
             <div className="absolute top-3 right-3 z-10">
               <DeleteButton
-                onDelete={() => deleteRoute(route.id)}
-                isDeleting={isDeleting}
+                onDelete={async () => {
+                  setDeletingId(route.id);
+                  await deleteRoute(route.id);
+                }}
+                isDeleting={isDeleting && deletingId === route.id}
               />
             </div>
             <div>

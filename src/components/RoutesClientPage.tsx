@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Plus, Search, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,10 +14,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { type Route } from "@/lib/schemas/routes";
+import { type Place } from "@/lib/schemas/places";
 
-export default function RoutesClientPage() {
+interface RoutesClientPageProps {
+  routes: Route[];
+  places: Place[];
+}
+
+export default function RoutesClientPage({ routes, places }: RoutesClientPageProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("date-desc");
+
+  // Optionally, filter/sort here if you want to pass only filtered data to RoutesList
+  // Or, let RoutesList handle it if it already does
 
   return (
     <main className="container mx-auto max-w-5xl py-8 px-4 md:px-6">
@@ -58,7 +68,7 @@ export default function RoutesClientPage() {
           </Select>
         </div>
       </div>
-      <RoutesList searchQuery={searchQuery} sortBy={sortBy} />
+      <RoutesList routes={routes} places={places} searchQuery={searchQuery} sortBy={sortBy} />
     </main>
   );
 }

@@ -3,7 +3,7 @@ import { MoveRight } from 'lucide-react';
 import RouteStatsPreview from '@/components/RouteStatsPreview';
 import RecentRoutes from '@/components/RecentRoutes';
 import { Button } from '@/components/ui/button';
-import { getRouteStats } from '@/app/(main)/routes/_actions/stats';
+import { getRouteStats } from '@/lib/db/queries';
 
 export default async function Home() {
   const initialStats = await getRouteStats();
