@@ -23,57 +23,27 @@ export async function getRouteStats(): Promise<RouteStats> {
   });
 
   const totalKilometers = allRoutes.reduce((sum, r) => sum + (r.distance || 0), 0);
-  
-  // Find most frequent route
-  const routeCounts: Record<string, { 
-    from: string; 
-    to: string; 
-    fromName: string; 
-    toName: string; 
-    count: number 
-  }> = {};
-  
-  allRoutes.forEach((route) => {
-    const key = `${route.fromPlaceId}-${route.toPlaceId}`;
-    if (!routeCounts[key]) {
-      routeCounts[key] = {
-        from: route.fromPlaceId,
-        to: route.toPlaceId,
-        fromName: placesMap.get(route.fromPlaceId) || 'Unknown Place',
-        toName: placesMap.get(route.toPlaceId) || 'Unknown Place',
-        count: 0,
-      };
-    }
-    routeCounts[key].count++;
-  });
-  
-  const mostFrequentRouteRaw = Object.values(routeCounts).reduce(
-    (max, current) => current.count > max.count ? current : max,
-    { count: 0, from: "", to: "", fromName: "", toName: "" }
-  );
 
-  let mostFrequentRoute = null;
-  if (
-    mostFrequentRouteRaw.count > 0 &&
-    mostFrequentRouteRaw.from &&
-    mostFrequentRouteRaw.to &&
-    /^[0-9a-fA-F-]{36}$/.test(mostFrequentRouteRaw.from) &&
-    /^[0-9a-fA-F-]{36}$/.test(mostFrequentRouteRaw.to)
-  ) {
-    mostFrequentRoute = {
-      fromPlaceId: mostFrequentRouteRaw.from,
-      toPlaceId: mostFrequentRouteRaw.to,
-      fromName: mostFrequentRouteRaw.fromName,
-      toName: mostFrequentRouteRaw.toName,
-      count: mostFrequentRouteRaw.count
-    };
-  }
+  // Date boundaries
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+  const totalKilometersToday = allRoutes
+    .filter(r => r.date >= startOfToday && r.date <= endOfToday)
+    .reduce((sum, r) => sum + (r.distance || 0), 0);
+
+  const totalKilometersThisMonth = allRoutes
+    .filter(r => r.date >= startOfMonth && r.date <= endOfMonth)
+    .reduce((sum, r) => sum + (r.distance || 0), 0);
 
   const stats = {
     totalRoutes: allRoutes.length,
     totalKilometers,
-    mostFrequentRoute,
-    avgMileagePerRoute: allRoutes.length ? totalKilometers / allRoutes.length : 0,
+    totalKilometersToday,
+    totalKilometersThisMonth,
   };
 
   return routeStatsSchema.parse(stats);
