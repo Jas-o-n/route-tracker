@@ -25,12 +25,17 @@ export default function StaticRouteMap({ start, end }: StaticRouteMapProps) {
     );
   if (error) return <p>Failed to load map</p>;
 
+  if (!data?.url) return <div role="alert">Map unavailable</div>;
+
   return (
     <Image
-      src={data!.url}
-      alt="Route map"
+      src={data.url}
+      alt={`Route map from ${start.lat},${start.lng} to ${end.lat},${end.lng}`}
       width={600}
       height={400}
+      className="max-w-full h-auto"
+      sizes="(max-width: 640px) 100vw, 600px"
+      loading="lazy"
+      decoding="async"
     />
-  );
-}
+  );}

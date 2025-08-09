@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Missing coordinates" }, { status: 400 });
   }
 
-  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || process.env.MAPBOX_TOKEN;
+  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   if (!token) {
     return NextResponse.json({ error: "Missing Mapbox token" }, { status: 500 });
   }
@@ -26,6 +26,14 @@ export async function GET(request: Request) {
   const startLngNum = Number(startLng);
   const endLatNum = Number(endLat);
   const endLngNum = Number(endLng);
+
+  // Validate numeric values and coordinate ranges
+  const isValidLat = (lat: number) => Number.isFinite(lat) && lat >= -90 && lat <= 90;
+  const isValidLng = (lng: number) => Number.isFinite(lng) && lng >= -180 && lng <= 180;
+
+  if (!isValidLat(startLatNum) || !isValidLng(startLngNum) || !isValidLat(endLatNum) || !isValidLng(endLngNum)) {
+    return NextResponse.json({ error: "Invalid coordinates" }, { status: 400 });
+  }
 
   const width = 600;
   const height = 400;
