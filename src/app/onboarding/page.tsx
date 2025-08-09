@@ -1,22 +1,15 @@
 'use client';
 
 import { useEffect } from 'react';
-import { SignedIn, useAuth, useUser, useClerk, PricingTable } from '@clerk/nextjs';
+import { useAuth, useUser, useClerk, PricingTable } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
+import { auth } from '@clerk/nextjs/server';
 
 export default function OnboardingPage() {
   const router = useRouter();
   const { isSignedIn } = useAuth();
   const { user } = useUser();
   const { session } = useClerk();
-
-  useEffect(() => {
-    if (!isSignedIn) return;
-    const hasActiveSubscription = session?.checkAuthorization({ plan: 'pro' });
-    if (hasActiveSubscription) {
-      router.replace('/dashboard');
-    }
-  }, [isSignedIn, router]);
 
   return (
     <div className="max-w-lg mx-auto py-16 px-4">

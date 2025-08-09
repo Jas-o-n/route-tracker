@@ -2,15 +2,25 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 const isPublicRoute = createRouteMatcher([
-  "/", // landing
-  "/onboarding", // onboarding flow remains accessible
+  "/",              // landing
+  "/onboarding",    // onboarding flow remains accessible
+  "/sign-in(.*)",   // Clerk sign-in
+  "/sign-up(.*)",   // Clerk sign-up
 ]);
 
+// API and TRPC routes should not redirect; return JSON errors instead
+const isApiRoute = createRouteMatcher([
+  "/api(.*)",
+  "/trpc(.*)",
+]);
 export default clerkMiddleware(async (auth, req) => {
   const { userId, redirectToSignIn } = await auth();
 
-  // If unauthenticated and not on a public route, go to sign-in
+  // If unauthenticated and not on a public route
   if (!userId && !isPublicRoute(req)) {
+    if (isApiRoute(req)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return redirectToSignIn({ returnBackUrl: req.url });
   }
 
@@ -18,11 +28,16 @@ export default clerkMiddleware(async (auth, req) => {
   const { has } = await auth();
   const hasActiveSubscription = has({ plan: 'pro'});
 
-  if (userId && !hasActiveSubscription && req.nextUrl.pathname !== "/onboarding") {
-    const onboardingUrl = new URL("/onboarding", req.url);
-    return NextResponse.redirect(onboardingUrl);
+  if (userId && !hasActiveSubscription) {
+    if (isApiRoute(req)) {
+      return NextResponse.json({ error: "Subscription required" }, { status: 403 });
+    }
+    if (req.nextUrl.pathname !== "/onboarding") {
+      const onboardingUrl = new URL("/onboarding", req.url);
+      return NextResponse.redirect(onboardingUrl);
+    }
   }
-
+  
   return NextResponse.next();
 });
 

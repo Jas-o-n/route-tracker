@@ -36,9 +36,9 @@ export default function LandingPage() {
             </SignUpButton>
           </SignedOut>
           <SignedIn>
-            <Link href="/onboarding">
-              <Button size="lg" className="font-semibold">Get Started Now</Button>
-            </Link>
+            <Button asChild size="lg" className="font-semibold">
+              <Link href="/onboarding">Get Started Now</Link>
+            </Button>
           </SignedIn>
           <Button size="lg" variant="outline">Learn More</Button>
         </div>
@@ -96,9 +96,9 @@ export default function LandingPage() {
               </SignUpButton>
             </SignedOut>
             <SignedIn>
-              <Link href="/onboarding">
-                <Button className="w-full font-semibold">Get Started</Button>
-              </Link>
+              <Button asChild className="w-full font-semibold">
+                <Link href="/onboarding">Get Started</Link>
+              </Button>
             </SignedIn>
           </Card>
         </div>
