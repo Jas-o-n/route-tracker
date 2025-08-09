@@ -1,6 +1,7 @@
 'use client';
 
 import { Button, buttonVariants } from "@/components/ui/button";
+import { clerkLightAppearance } from "@/lib/clerkAppearance";
 import { Card } from "@/components/ui/card";
 import { SignInButton, SignUpButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import Link from "next/link";
@@ -19,7 +20,7 @@ export default function LandingPage() {
           <a href="#pricing" className="hover:text-foreground transition">Pricing</a>
         </div>
         <div>
-          <SignInButton mode="modal">
+          <SignInButton mode="modal" appearance={clerkLightAppearance}>
             <Button variant="outline" className="font-semibold">Sign In</Button>
           </SignInButton>
         </div>
@@ -31,7 +32,7 @@ export default function LandingPage() {
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto mt-6 mb-8">Keeping track of your trips and mileage can be tedious and time-consuming. Our app automates route tracking, calculates distances, and organizes your travel data in one place so you can focus on what matters.</p>
         <div className="flex gap-4 justify-center">
           <SignedOut>
-            <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
+            <SignUpButton mode="modal" forceRedirectUrl="/onboarding" appearance={clerkLightAppearance}>
               <Button size="lg" className="font-semibold">Get Started Now</Button>
             </SignUpButton>
           </SignedOut>
@@ -91,7 +92,7 @@ export default function LandingPage() {
               <li>✓ Unlimited history</li>
             </ul>
             <SignedOut>
-              <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
+              <SignUpButton mode="modal" forceRedirectUrl="/onboarding" appearance={clerkLightAppearance}>
                 <Button className="w-full font-semibold">Get Started</Button>
               </SignUpButton>
             </SignedOut>
