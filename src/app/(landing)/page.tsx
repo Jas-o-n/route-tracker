@@ -2,8 +2,8 @@
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { SignInButton, SignUpButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import Link from "next/link";
-import { SignInButton } from "@clerk/nextjs";
 
 export default function LandingPage() {
   return (
@@ -30,7 +30,16 @@ export default function LandingPage() {
         <h1 className="text-5xl sm:text-6xl font-bold mb-2 tracking-tight">Track Your Routes.<br /><span className="text-muted-foreground font-semibold">Simplify Your Journeys.</span></h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto mt-6 mb-8">Keeping track of your trips and mileage can be tedious and time-consuming. Our app automates route tracking, calculates distances, and organizes your travel data in one place so you can focus on what matters.</p>
         <div className="flex gap-4 justify-center">
-          <Button size="lg" className="font-semibold">Get Started Now</Button>
+          <SignedOut>
+            <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
+              <Button size="lg" className="font-semibold">Get Started Now</Button>
+            </SignUpButton>
+          </SignedOut>
+          <SignedIn>
+            <Link href="/onboarding">
+              <Button size="lg" className="font-semibold">Get Started Now</Button>
+            </Link>
+          </SignedIn>
           <Button size="lg" variant="outline">Learn More</Button>
         </div>
       </section>
@@ -68,25 +77,34 @@ export default function LandingPage() {
         <p className="text-muted-foreground">Add places with address autocomplete and map pinning. Log routes with start and end locations, mileage, and notes. Instantly see your journeys visualized on a live dashboard.</p>
       </section>
 
-      {/* Pricing + Final CTA Combined Section */}
+      {/* Pricing */}
       <section id="pricing" className="max-w-4xl mx-auto px-4 py-16 text-center">
         <h2 className="text-3xl font-bold text-center mb-2">Ready to simplify your journeys?</h2>
         <p className="text-xl text-muted-foreground text-center mb-8">Sign up now and start tracking your routes for free.</p>
         <div className="flex justify-center">
           <Card className="p-8 flex flex-col items-center border-2 border-primary max-w-sm w-full">
             <div className="font-bold text-lg mb-2">Premium</div>
-            <div className="text-4xl font-bold mb-2">$4.99</div>
+            <div className="text-4xl font-bold mb-2">$12.99</div>
             <ul className="text-muted-foreground mb-4 space-y-1 text-center">
               <li>✓ Advanced analytics</li>
               <li>✓ Priority support</li>
               <li>✓ Unlimited history</li>
             </ul>
-            <Button className="w-full font-semibold">Get Started</Button>
+            <SignedOut>
+              <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
+                <Button className="w-full font-semibold">Get Started</Button>
+              </SignUpButton>
+            </SignedOut>
+            <SignedIn>
+              <Link href="/onboarding">
+                <Button className="w-full font-semibold">Get Started</Button>
+              </Link>
+            </SignedIn>
           </Card>
         </div>
       </section>
 
-      {/* Testimonials (moved to bottom) */}
+      {/* Testimonials */}
       <section className="max-w-5xl mx-auto px-4 py-16">
         <h2 className="text-3xl font-bold text-center mb-2">What users say</h2>
         <div className="text-2xl text-muted-foreground text-center mb-8 font-semibold">Loved by early adopters</div>
