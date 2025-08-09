@@ -2,6 +2,7 @@
 
 import { PricingTable } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
+import { clerkAppearance } from '@/lib/clerkAppearance';
 import {
   Card,
   CardContent,
@@ -11,26 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 export default function OnboardingPage() {
-  const appearance = {
-    baseTheme: dark,
-    variables: {
-      colorPrimary: 'hsl(var(--primary))',
-      colorText: 'hsl(var(--foreground))',
-      colorBackground: 'transparent',
-      colorInputBackground: 'hsl(var(--muted))',
-      borderRadius: '0.75rem',
-      fontFamily:
-        'Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"',
-    },
-    elements: {
-      // Best-effort keys used across Clerk components; ignored if not applicable
-      formButtonPrimary: {
-        borderRadius: '0.5rem',
-        fontWeight: 600,
-        padding: '0.625rem 0.875rem',
-      },
-    },
-  };
+  const appearance = { ...clerkAppearance, baseTheme: dark } as const;
 
   return (
     <main className="container mx-auto max-w-3xl py-12 px-4 md:px-6">
