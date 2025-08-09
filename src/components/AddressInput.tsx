@@ -58,6 +58,14 @@ export default function AddressInput({
     }
   }, [minimapFeature, onAddressSelect, onPlaceAddressChange]);
 
+  useEffect(() => {
+    if (!placeAddress?.trim()) {
+      setMinimapFeature(null);
+      setIsSuggestionsOpen(false);
+      setActiveIndex(-1);
+    }
+  }, [placeAddress]);
+
   const handleAddressChange = (value: string) => {
     onPlaceAddressChange(value);
     setMinimapFeature(null);
