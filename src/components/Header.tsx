@@ -13,6 +13,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { SignedIn, UserButton } from "@clerk/nextjs";
+import { clerkDarkAppearance, clerkLightAppearance } from '@/lib/clerkAppearance';
 
 const links = [
   { href: "/dashboard", label: "Home", icon: Home },
@@ -24,9 +25,9 @@ const links = [
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme } = useTheme();
   const [isMounted, setIsMounted] = useState(false);
-  const [isSheetOpen, setIsSheetOpen] = useState(false); // NEW: Sheet open state
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -87,7 +88,7 @@ export default function Header() {
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                 className="mr-2"
               >
-                {theme === "dark" ? (
+                {(resolvedTheme ?? theme) === "dark" ? (
                   <Sun className="h-5 w-5" />
                 ) : (
                   <Moon className="h-5 w-5" />
@@ -98,12 +99,7 @@ export default function Header() {
 
             {/* User Button for Signed-In Users */}
             <SignedIn>
-              <UserButton
-                appearance={{
-                  elements: { userButtonAvatarBox: "h-10 w-10" },
-                }}
-                afterSignOutUrl="/"
-              />
+              <UserButton appearance={(resolvedTheme ?? theme) === 'dark' ? clerkDarkAppearance : clerkLightAppearance}/>
             </SignedIn>
 
             {/* Mobile Menu */}

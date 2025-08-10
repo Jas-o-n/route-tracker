@@ -79,8 +79,8 @@ export const mostFrequentRouteSchema = z.object({
 export const routeStatsSchema = z.object({
   totalRoutes: z.number().int().nonnegative(),
   totalKilometers: z.number().nonnegative(),
-  avgMileagePerRoute: z.number().nonnegative(),
-  mostFrequentRoute: mostFrequentRouteSchema.nullable(),
+  totalKilometersToday: z.number().nonnegative(),
+  totalKilometersThisMonth: z.number().nonnegative(),
 });
 
 export type RouteModel = z.infer<typeof routeModelSchema>;

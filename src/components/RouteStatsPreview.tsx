@@ -36,18 +36,15 @@ export default function RouteStatsPreview({ initialStats }: RouteStatsPreviewPro
       bgColor: "bg-teal-50 dark:bg-teal-950",
     },
     {
-      title: "Most Frequent Route",
-      value: initialStats.mostFrequentRoute
-        ? `${initialStats.mostFrequentRoute.fromName} → ${initialStats.mostFrequentRoute.toName}`
-        : "N/A",
-      subtitle: initialStats.mostFrequentRoute ? `${initialStats.mostFrequentRoute.count} times` : "",
+      title: "Total Today",
+      value: `${initialStats.totalKilometersToday.toLocaleString()} km`,
       icon: <MapPin className="h-6 w-6" />,
       color: "text-orange-500",
       bgColor: "bg-orange-50 dark:bg-orange-950",
     },
     {
-      title: "Avg. Kilometers per Route",
-      value: `${initialStats.avgMileagePerRoute.toFixed(1)} km`,
+      title: "Total This Month",
+      value: `${initialStats.totalKilometersThisMonth.toLocaleString()} km`,
       icon: <TrendingUp className="h-6 w-6" />,
       color: "text-purple-500",
       bgColor: "bg-purple-50 dark:bg-purple-950",
@@ -66,7 +63,6 @@ export default function RouteStatsPreview({ initialStats }: RouteStatsPreviewPro
             </div>
             <h3 className="text-lg font-medium">{stat.title}</h3>
             <p className="text-2xl font-bold">{stat.value}</p>
-            {stat.subtitle && <p className="text-sm text-muted-foreground">{stat.subtitle}</p>}
           </CardContent>
         </Card>
       ))}

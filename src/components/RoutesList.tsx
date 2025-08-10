@@ -118,7 +118,7 @@ export default function RoutesList({ routes, places, searchQuery, sortBy }: Rout
               </div>
             </div>
             <div className="flex items-center justify-between mt-4">
-              <div className="text-muted-foreground text-lg">{formatDate(route.date)}</div>
+              <div className="text-muted-foreground text-lg whitespace-pre-line">{formatDate(route.date).replace(', ', ',\n')}</div>
               <Button variant="outline" size="lg" className="text-lg font-semibold px-6 py-2" asChild>
                 <Link href={`/routes/${route.id}`}>View Details</Link>
               </Button>

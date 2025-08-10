@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
-import RouteMap from "@/components/RouteMap";
+import StaticRouteMap from "@/components/StaticRouteMap";
 import { DeleteButton } from "@/components/DeleteButton";
 import type { Route } from "@/lib/schemas/routes";
 import type { Place } from "@/lib/schemas/places";
@@ -133,13 +133,16 @@ export default function RouteDetailClientPage({ route, places }: Props) {
               <CardTitle>Route Map</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="h-[400px]">
-                <RouteMap 
-                  fromPlace={fromPlace} 
-                  toPlace={toPlace} 
-                  mileage={mileage}
+              {fromPlace && toPlace ? (
+                <StaticRouteMap
+                  start={{ lat: fromPlace.latitude, lng: fromPlace.longitude }}
+                  end={{ lat: toPlace.latitude, lng: toPlace.longitude }}
                 />
-              </div>
+              ) : (
+                <div className="h-[400px]">
+                  <div className="w-full h-full animate-pulse rounded-md bg-muted" />
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

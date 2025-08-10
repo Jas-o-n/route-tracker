@@ -1,25 +1,39 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useAuth, useUser, useClerk, PricingTable } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
-import { auth } from '@clerk/nextjs/server';
-
+import { PricingTable } from '@clerk/nextjs';
+import { dark } from '@clerk/themes';
+import { clerkAppearance } from '@/lib/clerkAppearance';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 export default function OnboardingPage() {
-  const router = useRouter();
-  const { isSignedIn } = useAuth();
-  const { user } = useUser();
-  const { session } = useClerk();
+  const appearance = { ...clerkAppearance, baseTheme: dark } as const;
 
   return (
-    <div className="max-w-lg mx-auto py-16 px-4">
-      <h1 className="text-3xl font-bold mb-2">Complete your onboarding</h1>
-      <p className="text-muted-foreground mb-6">
-        Subscribe to the Premium plan ($12.99/month) to access the app.
-      </p>
+    <main className="container mx-auto max-w-3xl py-12 px-4 md:px-6">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold tracking-tight mb-2">Complete your onboarding</h1>
+        <p className="text-muted-foreground">Subscribe to the Premium plan to access the app.</p>
+      </div>
 
-      <PricingTable />
-    </div>
+      <Card className="p-4 md:p-6">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">Premium</CardTitle>
+          <CardDescription>$12.99/month · Cancel anytime</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PricingTable appearance={appearance} />
+        </CardContent>
+        <CardFooter className="justify-center text-xs text-muted-foreground">
+          Secure checkout
+        </CardFooter>
+      </Card>
+    </main>
   );
 }
 
