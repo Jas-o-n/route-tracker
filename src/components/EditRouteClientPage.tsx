@@ -67,7 +67,7 @@ const formSchema = z.object({
       message: "Date cannot be in the future",
     }),
   notes: z.string().optional(),
-  isWork: z.boolean().optional().default(false),
+  isWork: z.boolean().default(false),
 }).refine(
   (data) => data.endMileage >= data.startMileage,
   {
@@ -76,7 +76,7 @@ const formSchema = z.object({
   }
 );
 
-type RouteFormData = z.infer<typeof formSchema>;
+type EditRouteFormData = z.input<typeof formSchema>;
 
 interface Props {
   route: Route;
@@ -94,7 +94,7 @@ export default function EditRouteClientPage({ route, places }: Props) {
   const [openStart, setOpenStart] = useState(false);
   const [openDest, setOpenDest] = useState(false);
 
-  const form = useForm<RouteFormData>({
+  const form = useForm<EditRouteFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       fromPlaceId: route.fromPlaceId,
@@ -117,7 +117,7 @@ export default function EditRouteClientPage({ route, places }: Props) {
     },
   });
 
-  const onSubmit = async (values: RouteFormData) => {
+  const onSubmit = async (values: EditRouteFormData) => {
     await updateRoute(values);
   };
 
