@@ -169,7 +169,8 @@ function Calendar({
               value={value?.toString()}
               onValueChange={val => {
                 if (onChange) {
-                  onChange({ target: { value: val } });
+                  const event = { target: { value: val } } as unknown as React.ChangeEvent<HTMLSelectElement>
+                  onChange(event)
                 }
               }}
             >
