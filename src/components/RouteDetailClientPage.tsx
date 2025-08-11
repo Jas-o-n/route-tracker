@@ -62,11 +62,11 @@ export default function RouteDetailClientPage({ route, places }: Props) {
       </div>
 
       {/* Main Content - Updated Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         {/* Left Column - Route Info and Stats */}
         <div className="space-y-6">
           {/* Route Information */}
-          <Card>
+          <Card className="h-full">
             <CardHeader>
               <CardTitle>Route Information</CardTitle>
             </CardHeader>
@@ -128,18 +128,18 @@ export default function RouteDetailClientPage({ route, places }: Props) {
 
         {/* Right Column - Map */}
         <div className="lg:flex lg:flex-col">
-          <Card>
+          <Card className="h-full flex flex-col">
             <CardHeader>
               <CardTitle>Route Map</CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
+            <CardContent className="flex-1 p-6 pt-0">
               {fromPlace && toPlace ? (
                 <StaticRouteMap
                   start={{ lat: fromPlace.latitude, lng: fromPlace.longitude }}
                   end={{ lat: toPlace.latitude, lng: toPlace.longitude }}
                 />
               ) : (
-                <div className="h-[400px]">
+                <div className="min-h-[400px] h-full">
                   <div className="w-full h-full animate-pulse rounded-md bg-muted" />
                 </div>
               )}

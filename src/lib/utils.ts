@@ -16,11 +16,25 @@ export function formatDate(date: string | Date | undefined | null): string {
   if (isNaN(dateObj.getTime())) {
     return 'Invalid date';
   }
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  }).format(dateObj);
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const year = dateObj.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+// Safe for filenames: uses hyphens instead of slashes
+export function formatDateForFilename(date: string | Date | undefined | null): string {
+  if (!date) {
+    return 'dd-mm-yyyy';
+  }
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(dateObj.getTime())) {
+    return 'dd-mm-yyyy';
+  }
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const year = dateObj.getFullYear();
+  return `${day}-${month}-${year}`;
 }
 
 // Convert SearchBoxFeature to GeoJSON Feature
