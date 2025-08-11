@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -23,6 +23,7 @@ import { PlaceSelect } from "@/components/place-select";
 import { useAddRoute } from "@/hooks/useRoutes";
 import { useToast } from "@/hooks/use-toast";
 import type { Place } from "@/lib/schemas/places";
+import { useQuery,useQueryClient } from "@tanstack/react-query";
 
 interface NewRouteClientPageProps {
   places: Place[];
@@ -31,9 +32,11 @@ interface NewRouteClientPageProps {
 export default function NewRouteClientPage({ places }: NewRouteClientPageProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { addRoute, isPending } = useAddRoute(
     () => {
       toast({ title: "Success", description: "Route added successfully" });
+      queryClient.invalidateQueries({ queryKey: ['recentRoute'] });
       router.push("/routes");
       router.refresh();
     },
@@ -59,6 +62,23 @@ export default function NewRouteClientPage({ places }: NewRouteClientPageProps) 
       notes: "",
     },
   });
+
+  const { data: recent, isLoading: isLoadingRecent } = useQuery({
+    queryKey: ['recentRoute'],
+    queryFn: async () => {
+      const res = await fetch('/api/routes/recent');
+      if (!res.ok) throw new Error('Failed to fetch recent route');
+      return (await res.json()) as { route: { endMileage: number } | null };
+    },
+  });
+
+  useEffect(() => {
+    const currentValue = form.getValues('startMileage');
+    if (!currentValue && recent?.route?.endMileage != null) {
+      form.setValue('startMileage', recent.route.endMileage, { shouldDirty: false });
+    }
+  }, [recent, form]);
+  
 
   async function onSubmit(data: RouteFormData) {
     await addRoute(data);

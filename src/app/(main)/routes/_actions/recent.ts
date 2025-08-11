@@ -29,7 +29,7 @@ export async function getRecentRoutes(limit = 3) {
 
   const result: RouteModel[] = await db.query.routes.findMany({
     where: (routes, { eq }) => eq(routes.userID, userId),
-    orderBy: [desc(routes.date)],
+    orderBy: [desc(routes.createdAt)],
     limit: limit,
   });
 
