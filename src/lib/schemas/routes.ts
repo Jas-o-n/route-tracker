@@ -8,6 +8,7 @@ const baseRouteFields = {
   endMileage: z.number().int().nonnegative(),
   date: z.string().datetime(),
   notes: z.string().nullable(),
+  isWork: z.boolean().optional().default(false),
 };
 
 // Validation refinement function
@@ -43,6 +44,7 @@ export const routeSchema = z.object({
   distance: z.number().int(),
   date: z.string().datetime(),
   notes: z.string().nullable(),
+  isWork: z.boolean(),
   userID: z.string(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),

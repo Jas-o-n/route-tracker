@@ -23,6 +23,7 @@ function convertToRoute(model: RouteModel): Route {
     distance: model.distance,
     date: model.date.toISOString(),
     notes: model.notes,
+    isWork: model.isWork ?? false,
     userID: model.userID,
     createdAt: model.createdAt.toISOString(),
     updatedAt: model.updatedAt.toISOString(),

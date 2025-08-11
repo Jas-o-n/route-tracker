@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
 import { PlaceSelect } from "@/components/place-select";
 import { useAddRoute } from "@/hooks/useRoutes";
@@ -60,6 +61,7 @@ export default function NewRouteClientPage({ places }: NewRouteClientPageProps) 
       endMileage: 0,
       date: new Date().toISOString(),
       notes: "",
+      isWork: true,
     },
   });
 
@@ -184,6 +186,22 @@ export default function NewRouteClientPage({ places }: NewRouteClientPageProps) 
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="isWork"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                    <div className="space-y-0.5">
+                      <FormLabel>Work trip</FormLabel>
+                      <p className="text-sm text-muted-foreground">Toggle on for work, off for private.</p>
+                    </div>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}

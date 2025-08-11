@@ -14,6 +14,7 @@ export type ExportableRoute = {
   endMileage: number;
   distance: number;
   notes: string | null;
+  type: string;
 };
 
 export async function getRoutesForExport(formData: FormData) {
@@ -73,10 +74,11 @@ export async function getRoutesForExport(formData: FormData) {
     endMileage: route.endMileage,
     distance: route.distance,
     notes: route.notes,
+    type: route.isWork ? 'Work' : 'Private',
   }));
 
   // Convert to CSV
-  const headers = ['Date', 'From', 'To', 'Start Mileage', 'End Mileage', 'Distance', 'Notes'];
+  const headers = ['Date', 'From', 'To', 'Start Mileage', 'End Mileage', 'Distance', 'Notes', 'Type'];
   const rows = exportableRoutes.map(route => [
     route.date,
     route.fromPlace,
@@ -84,7 +86,8 @@ export async function getRoutesForExport(formData: FormData) {
     route.startMileage,
     route.endMileage,
     route.distance,
-    route.notes || ''
+    route.notes || '',
+    route.type,
   ]);
 
   const quote = (cell: unknown) => {
