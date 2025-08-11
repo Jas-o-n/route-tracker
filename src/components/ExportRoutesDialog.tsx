@@ -39,10 +39,8 @@ export function ExportRoutesDialog() {
         const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = blobUrl;
-        const formatDate = (date: Date) => date.toLocaleDateString("en-CA");
-        link.download = `routes-${formatDate(dateRange.from!)}_to_${formatDate(
-          dateRange.to!
-        )}.csv`;
+        const ddmmyyyy = (d: Date) => `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
+        link.download = `routes-${ddmmyyyy(dateRange.from!)}_to_${ddmmyyyy(dateRange.to!)}.csv`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -76,7 +74,7 @@ export function ExportRoutesDialog() {
                 className="w-full justify-between font-normal"
               >
                 {dateRange?.from && dateRange?.to
-                  ? `${dateRange.from.toLocaleDateString()} - ${dateRange.to.toLocaleDateString()}`
+                  ? `${String(dateRange.from.getDate()).padStart(2,'0')}/${String(dateRange.from.getMonth()+1).padStart(2,'0')}/${dateRange.from.getFullYear()} - ${String(dateRange.to.getDate()).padStart(2,'0')}/${String(dateRange.to.getMonth()+1).padStart(2,'0')}/${dateRange.to.getFullYear()}`
                   : "Select date range"}
                 <ChevronDown className="ml-2 h-4 w-4" />
               </Button>

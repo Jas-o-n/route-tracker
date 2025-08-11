@@ -19,7 +19,7 @@ export default function StaticRouteMap({ start, end }: StaticRouteMapProps) {
 
   if (isLoading)
     return (
-      <div className="w-[600px] h-[400px]">
+      <div className="w-full min-h-[400px] h-full">
         <Skeleton className="w-full h-full" />
       </div>
     );
@@ -28,14 +28,15 @@ export default function StaticRouteMap({ start, end }: StaticRouteMapProps) {
   if (!data?.url) return <div role="alert">Map unavailable</div>;
 
   return (
-    <Image
-      src={data.url}
-      alt={`Route map from ${start.lat},${start.lng} to ${end.lat},${end.lng}`}
-      width={600}
-      height={400}
-      className="max-w-full h-auto"
-      sizes="(max-width: 640px) 100vw, 600px"
-      loading="lazy"
-      decoding="async"
-    />
+    <div className="relative w-full min-h-[400px] h-full">
+      <Image
+        src={data.url}
+        alt={`Route map from ${start.lat},${start.lng} to ${end.lat},${end.lng}`}
+        fill
+        className="object-cover"
+        sizes="(max-width: 640px) 100vw, 50vw"
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
   );}

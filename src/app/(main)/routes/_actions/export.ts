@@ -2,6 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
+import { formatDate } from "@/lib/utils";
 import { routes } from "@/lib/db/schema";
 import { desc, and, gte, lte, eq } from "drizzle-orm";
 
@@ -65,7 +66,7 @@ export async function getRoutesForExport(formData: FormData) {
   });
 
   const exportableRoutes: ExportableRoute[] = result.map((route) => ({
-    date: route.date.toISOString().split('T')[0],
+    date: formatDate(route.date),
     fromPlace: route.fromPlace.full_address,
     toPlace: route.toPlace.full_address,
     startMileage: route.startMileage,

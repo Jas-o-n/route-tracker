@@ -106,7 +106,7 @@ export default function EditRouteClientPage({ route, places }: Props) {
                 const d = new Date(route.date);
                 return isNaN(d.getTime())
                   ? ""
-                  : d.toLocaleDateString('sv-SE'); // yyyy-mm-dd without timezone shift
+                  : d.toLocaleDateString('sv-SE');
               })()
           )
         : "",
@@ -236,10 +236,10 @@ export default function EditRouteClientPage({ route, places }: Props) {
                               (() => {
                                 if (isYYYYMMDD(field.value)) {
                                   const d = parseYMDToLocalDate(field.value);
-                                  return d ? d.toLocaleDateString() : field.value;
+                                  return d ? `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}` : field.value;
                                 }
                                 const d = new Date(field.value);
-                                return isNaN(d.getTime()) ? field.value : d.toLocaleDateString();
+                                return isNaN(d.getTime()) ? field.value : `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
                               })()
                             ) : (
                               "Select date"
