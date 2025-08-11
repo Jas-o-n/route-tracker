@@ -34,9 +34,14 @@ export default async function RecentRoutes() {
           <Card key={route.id} className="overflow-hidden group transition-all hover:shadow-md">
             <CardContent className="px-6 pt-6 pb-4">
               <div className="flex justify-between items-start mb-4">
-                <Badge variant="outline" className="text-xs">
-                  {mileage} km
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs">
+                    {mileage} km
+                  </Badge>
+                  <Badge variant={route.isWork ? "default" : "outline"} className="text-xs">
+                    {route.isWork ? "Work" : "Private"}
+                  </Badge>
+                </div>
                 <div className="flex items-center text-xs text-muted-foreground">
                   <Calendar className="h-3 w-3 mr-1" />
                   {formatDate(route.date)}

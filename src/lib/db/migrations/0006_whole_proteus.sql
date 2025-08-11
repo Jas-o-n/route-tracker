@@ -1,0 +1,1 @@
+ALTER TABLE "routes" ADD COLUMN "is_work" boolean DEFAULT false NOT NULL;

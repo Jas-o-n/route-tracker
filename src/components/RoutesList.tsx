@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
 import { DeleteButton } from "@/components/DeleteButton";
@@ -10,6 +11,7 @@ import { type Place } from "@/lib/schemas/places";
 import { useDeleteRoute } from "@/hooks/useRoutes";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Calendar } from "lucide-react";
 
 interface RoutesListProps {
   routes: Route[];
@@ -106,20 +108,28 @@ export default function RoutesList({ routes, places, searchQuery, sortBy }: Rout
                 isDeleting={isDeleting && deletingId === route.id}
               />
             </div>
-            <div>
-              <div className="text-2xl font-bold mb-2">{mileage} km</div>
-              <div className="flex items-center text-base font-medium mb-4 flex-wrap min-w-0">
-                <span className="text-primary font-semibold mr-2 truncate max-w-[6rem] min-w-0">{fromPlace?.name}</span>
-                <span className="mx-1 text-xl text-muted-foreground shrink-0">→</span>
-                <span className="flex items-center text-muted-foreground mr-2 min-w-0">
-                  <span className="sr-only">To</span>
-                </span>
-                <span className="text-primary font-semibold truncate max-w-[6rem] min-w-0">{toPlace?.name}</span>
+
+            <CardContent className="p-0">
+              <div className="flex items-center gap-2 mb-4">
+                <Badge variant="outline" className="text-xs">{mileage} km</Badge>
+                <Badge variant={route.isWork ? "default" : "outline"} className="text-xs">
+                  {route.isWork ? "Work" : "Private"}
+                </Badge>
               </div>
-            </div>
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-muted-foreground text-lg whitespace-pre-line">{formatDate(route.date).replace(', ', ',\n')}</div>
-              <Button variant="outline" size="lg" className="text-lg font-semibold px-6 py-2" asChild>
+
+              <div className="flex items-center text-base font-medium mb-4 min-w-0">
+                <span className="truncate max-w-[45%] text-primary font-semibold">{fromPlace?.name}</span>
+                <span className="mx-2 text-muted-foreground shrink-0">→</span>
+                <span className="truncate max-w-[45%] text-primary font-semibold">{toPlace?.name}</span>
+              </div>
+            </CardContent>
+
+            <div className="flex items-center justify-between mt-2">
+              <div className="text-sm text-muted-foreground flex items-center">
+                <Calendar className="h-3 w-3 mr-1" />
+                {formatDate(route.date)}
+              </div>
+              <Button variant="outline" asChild>
                 <Link href={`/routes/${route.id}`}>View Details</Link>
               </Button>
             </div>

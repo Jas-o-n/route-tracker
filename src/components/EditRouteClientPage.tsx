@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -66,6 +67,7 @@ const formSchema = z.object({
       message: "Date cannot be in the future",
     }),
   notes: z.string().optional(),
+  isWork: z.boolean().default(false),
 }).refine(
   (data) => data.endMileage >= data.startMileage,
   {
@@ -74,7 +76,7 @@ const formSchema = z.object({
   }
 );
 
-type RouteFormData = z.infer<typeof formSchema>;
+type EditRouteFormData = z.input<typeof formSchema>;
 
 interface Props {
   route: Route;
@@ -92,7 +94,7 @@ export default function EditRouteClientPage({ route, places }: Props) {
   const [openStart, setOpenStart] = useState(false);
   const [openDest, setOpenDest] = useState(false);
 
-  const form = useForm<RouteFormData>({
+  const form = useForm<EditRouteFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       fromPlaceId: route.fromPlaceId,
@@ -111,10 +113,11 @@ export default function EditRouteClientPage({ route, places }: Props) {
           )
         : "",
       notes: route.notes ?? "",
+      isWork: route.isWork ?? false,
     },
   });
 
-  const onSubmit = async (values: RouteFormData) => {
+  const onSubmit = async (values: EditRouteFormData) => {
     await updateRoute(values);
   };
 
@@ -271,6 +274,23 @@ export default function EditRouteClientPage({ route, places }: Props) {
                       </PopoverContent>
                     </Popover>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Notes Field */}
+              <FormField
+                control={form.control}
+                name="isWork"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                    <div className="space-y-0.5">
+                      <FormLabel>Work trip</FormLabel>
+                      <p className="text-sm text-muted-foreground">Toggle on for work, off for private.</p>
+                    </div>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
                   </FormItem>
                 )}
               />
