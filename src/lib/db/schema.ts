@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, integer, uuid, decimal } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, integer, uuid, decimal, boolean } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 export const places = pgTable("places", {
@@ -29,6 +29,7 @@ export const routes = pgTable("routes", {
   distance: integer("distance").notNull(),
   date: timestamp("date").defaultNow().notNull(),
   notes: text("notes"),
+  isWork: boolean("is_work").notNull().default(false),
   userID: text("user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

@@ -6,6 +6,7 @@ import { ArrowLeft, Calendar, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { formatDate } from "@/lib/utils";
 import StaticRouteMap from "@/components/StaticRouteMap";
 import { DeleteButton } from "@/components/DeleteButton";
@@ -110,9 +111,14 @@ export default function RouteDetailClientPage({ route, places }: Props) {
                   </div>
                 </div>
                 <div className="mt-2">
-                  <Badge variant="secondary">
-                    {formatMileage(mileage)} km total
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">
+                      {formatMileage(mileage)} km total
+                    </Badge>
+                    <Badge variant={route.isWork ? "default" : "outline"}>
+                      {route.isWork ? "Work" : "Private"}
+                    </Badge>
+                  </div>
                 </div>
               </div>
 
