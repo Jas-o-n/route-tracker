@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -21,15 +20,34 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { PlaceSelect } from "@/components/place-select";
-import { usePlaces } from "@/hooks/usePlaces";
 import { useAddRoute } from "@/hooks/useRoutes";
 import { useToast } from "@/hooks/use-toast";
+import type { Place } from "@/lib/schemas/places";
+import { useQuery,useQueryClient } from "@tanstack/react-query";
 
-export default function NewRoutePage() {
+interface NewRouteClientPageProps {
+  places: Place[];
+}
+
+export default function NewRouteClientPage({ places }: NewRouteClientPageProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const { isLoading: isLoadingPlaces } = usePlaces();
-  const { addRoute, isPending } = useAddRoute();
+  const queryClient = useQueryClient();
+  const { addRoute, isPending } = useAddRoute(
+    () => {
+      toast({ title: "Success", description: "Route added successfully" });
+      queryClient.invalidateQueries({ queryKey: ['recentRoute'] });
+      router.push("/routes");
+      router.refresh();
+    },
+    (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to add route",
+        variant: "destructive",
+      });
+    }
+  );
   const [openStart, setOpenStart] = useState(false);
   const [openDest, setOpenDest] = useState(false);
 
@@ -45,23 +63,29 @@ export default function NewRoutePage() {
     },
   });
 
-  async function onSubmit(data: RouteFormData) {
-    try {
-      await addRoute(data);
-      toast({ title: "Success", description: "Route added successfully" });
-      router.push("/routes");
-      router.refresh();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to add route",
-        variant: "destructive",
-      });
+  const { data: recent, isLoading: isLoadingRecent } = useQuery({
+    queryKey: ['recentRoute'],
+    queryFn: async () => {
+      const res = await fetch('/api/routes/recent');
+      if (!res.ok) throw new Error('Failed to fetch recent route');
+      return (await res.json()) as { route: { endMileage: number } | null };
+    },
+  });
+
+  useEffect(() => {
+    const currentValue = form.getValues('startMileage');
+    if (!currentValue && recent?.route?.endMileage != null) {
+      form.setValue('startMileage', recent.route.endMileage, { shouldDirty: false });
     }
+  }, [recent, form]);
+  
+
+  async function onSubmit(data: RouteFormData) {
+    await addRoute(data);
   }
 
-  return (    <main className="container mx-auto max-w-5xl py-8 px-4 md:px-6">
+  return (
+    <main className="container mx-auto max-w-5xl py-8 px-4 md:px-6">
       <div className="mb-8">
         <Link
           href="/routes"
@@ -91,6 +115,7 @@ export default function NewRoutePage() {
                         onChange={field.onChange}
                         open={openStart}
                         onOpenChange={setOpenStart}
+                        places={places}
                       />
                     </FormControl>
                     <FormMessage />
@@ -110,6 +135,7 @@ export default function NewRoutePage() {
                         onChange={field.onChange}
                         open={openDest}
                         onOpenChange={setOpenDest}
+                        places={places}
                       />
                     </FormControl>
                     <FormMessage />
@@ -128,8 +154,8 @@ export default function NewRoutePage() {
                         <Input
                           type="number"
                           {...field}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value) || 0)
+                           onChange={(e) =>
+                            field.onChange(e.target.valueAsNumber)
                           }
                         />
                       </FormControl>
@@ -148,8 +174,8 @@ export default function NewRoutePage() {
                         <Input
                           type="number"
                           {...field}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value) || 0)
+                           onChange={(e) =>
+                            field.onChange(e.target.valueAsNumber)
                           }
                         />
                       </FormControl>
@@ -176,7 +202,7 @@ export default function NewRoutePage() {
               <div className="flex justify-end space-x-4">
                 <Button
                   type="submit"
-                  disabled={isPending || isLoadingPlaces}
+                  disabled={isPending}
                 >
                   {isPending ? "Adding..." : "Add Route"}
                 </Button>
@@ -187,4 +213,4 @@ export default function NewRoutePage() {
       </Card>
     </main>
   );
-}
+} 

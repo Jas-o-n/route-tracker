@@ -1,14 +1,15 @@
+"use server";
+
 import { db } from "@/lib/db";
 import { places } from "@/lib/db/schema";
-import { eq, sql, and } from "drizzle-orm";
+import { eq, sql, and, asc } from "drizzle-orm";
+import { auth } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
 import {
   placeSchema,
-  placeModelSchema,
-  searchBoxFeatureSchema,
   type Place,
   type PlaceModel,
   type SearchBoxFeature,
-  type Coordinates,
 } from "@/lib/schemas/places";
 import { MapboxService } from "@/lib/services/mapbox-service";
 
@@ -33,11 +34,14 @@ function convertToPlace(model: PlaceModel): Place {
   return placeSchema.parse(place);
 }
 
-export async function getPlaces(userID: string): Promise<Place[]> {
+export async function getPlaces(): Promise<Place[]> {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Not authenticated");
+
   // Cast the result to handle decimal string conversion
   const result = await db.query.places.findMany({
-    where: (places, { eq }) => eq(places.userID, userID),
-    orderBy: (places, { asc }) => [asc(places.name)],
+    where: (places, { eq }) => eq(places.userID, userId),
+    orderBy: [asc(places.name)],
   }) as any as PlaceModel[];
 
   return result.map(convertToPlace);
@@ -46,8 +50,10 @@ export async function getPlaces(userID: string): Promise<Place[]> {
 export async function addPlace(
   feature: SearchBoxFeature, 
   placeName: string,
-  userID: string
 ): Promise<Place> {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Not authenticated");
+
   const mapboxService = new MapboxService();
 
   // Extract coordinates using the service
@@ -68,7 +74,7 @@ export async function addPlace(
     // Convert numbers to SQL decimal literals
     latitude: sql`${coordinates.latitude}::decimal(10,7)`,
     longitude: sql`${coordinates.longitude}::decimal(10,7)`,
-    userID,
+    userID: userId,
   };
 
   // Cast the result to handle decimal string conversion
@@ -76,13 +82,33 @@ export async function addPlace(
     .values(placeData)
     .returning() as any as PlaceModel[];
 
+  revalidatePath("/places");
+  revalidatePath("/routes");
   return convertToPlace(newPlace);
 }
 
-export async function deletePlace(id: string, userID: string): Promise<boolean> {
-  const result = await db.delete(places)
-    .where(and(eq(places.id, id), eq(places.userID, userID)))
-    .returning();
+export async function deletePlace(id: string): Promise<boolean> {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Not authenticated");
+
+  let result: unknown[] = [];
+  try {
+    result = await db
+      .delete(places)
+      .where(and(eq(places.id, id), eq(places.userID, userId)))
+      .returning();
+  } catch (error) {
+    const code = (error as any)?.code as string | undefined;
+    const message = (error as Error)?.message || "";
+    if (code === "23503" || /foreign key/i.test(message)) {
+      throw new Error(
+        "Cannot delete this place because it is used by one or more routes."
+      );
+    }
+    throw error;
+  }
   
+  revalidatePath("/places");
+  revalidatePath("/routes");
   return result.length > 0;
 }

@@ -58,6 +58,14 @@ export default function AddressInput({
     }
   }, [minimapFeature, onAddressSelect, onPlaceAddressChange]);
 
+  useEffect(() => {
+    if (!placeAddress?.trim()) {
+      setMinimapFeature(null);
+      setIsSuggestionsOpen(false);
+      setActiveIndex(-1);
+    }
+  }, [placeAddress]);
+
   const handleAddressChange = (value: string) => {
     onPlaceAddressChange(value);
     setMinimapFeature(null);
@@ -128,7 +136,7 @@ export default function AddressInput({
         </div>
       </div>
       {minimapFeature && (
-        <div className="h-[180px] w-full relative mt-4 rounded-md overflow-hidden bg-secondary">
+        <div className="h-[300px] w-full relative mt-4 rounded-md overflow-hidden bg-secondary">
           <AddressMinimap
             {...{
               feature: convertToGeoJSONFeature(minimapFeature),

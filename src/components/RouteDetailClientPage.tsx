@@ -1,16 +1,17 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Calendar, Edit, MapPin } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Calendar, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
-import RouteMap from "@/components/RouteMap";
-import { usePlaces } from "@/hooks/usePlaces";
+import StaticRouteMap from "@/components/StaticRouteMap";
 import { DeleteButton } from "@/components/DeleteButton";
-import { useRoute, useRoutes } from "@/hooks/useRoutes";
+import type { Route } from "@/lib/schemas/routes";
+import type { Place } from "@/lib/schemas/places";
+import { useDeleteRoute } from "@/hooks/useRoutes";
 
 function formatMileage(value: number | undefined | null): string {
   if (typeof value !== 'number' || isNaN(value)) {
@@ -19,44 +20,26 @@ function formatMileage(value: number | undefined | null): string {
   return value.toLocaleString();
 }
 
-export default function RouteDetailPage() {
-  const params = useParams();
+interface Props {
+  route: Route;
+  places: Place[];
+}
+
+export default function RouteDetailClientPage({ route, places }: Props) {
   const router = useRouter();
-  const id = params.id as string;
-  const { places, isLoading: placesLoading } = usePlaces();
-  const { data: route, isLoading: routeLoading, isError } = useRoute(id);
-  const { deleteRoute, isDeleting } = useRoutes();
-
-  const handleDeleteRoute = async () => {
-    await deleteRoute(id);
+  const { deleteRoute, isDeleting } = useDeleteRoute(() => {
     router.push("/routes");
-  };
-  
-  if (routeLoading || placesLoading) {
-    return (
-      <div className="container mx-auto max-w-3xl py-8 px-4 md:px-6 flex justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-      </div>
-    );
-  }
-
-  if (isError || !route) {
-    return (
-      <div className="container mx-auto max-w-3xl py-8 px-4 md:px-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Route Not Found</h1>
-          <p className="mb-6">The route you're looking for doesn't exist or has been removed.</p>
-          <Button asChild>
-            <Link href="/routes">Back to Routes</Link>
-          </Button>
-        </div>
-      </div>
-    );
-  }
+    router.refresh();
+  });
 
   const fromPlace = places.find(p => p.id === route.fromPlaceId);
   const toPlace = places.find(p => p.id === route.toPlaceId);
-  const mileage = route.endMileage - route.startMileage;
+  const start = route.startMileage;
+  const end = route.endMileage;
+  const mileage =
+    typeof start === "number" && !isNaN(start) && typeof end === "number" && !isNaN(end)
+      ? Math.max(0, end - start)
+      : undefined;
 
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 space-y-6">
@@ -74,19 +57,16 @@ export default function RouteDetailPage() {
           <Button variant="outline" asChild>
             <Link href={`/routes/${route.id}/edit`}>Edit</Link>
           </Button>
-          <DeleteButton 
-            onDelete={handleDeleteRoute} 
-            isDeleting={isDeleting}
-          />
+          <DeleteButton onDelete={() => deleteRoute(route.id)} isDeleting={isDeleting} />
         </div>
       </div>
 
       {/* Main Content - Updated Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         {/* Left Column - Route Info and Stats */}
         <div className="space-y-6">
           {/* Route Information */}
-          <Card>
+          <Card className="h-full">
             <CardHeader>
               <CardTitle>Route Information</CardTitle>
             </CardHeader>
@@ -122,16 +102,16 @@ export default function RouteDetailPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Start</p>
-                    <p className="font-medium">{formatMileage(route.startMileage)} miles</p>
+                    <p className="font-medium">{formatMileage(route.startMileage)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">End</p>
-                    <p className="font-medium">{formatMileage(route.endMileage)} miles</p>
+                    <p className="font-medium">{formatMileage(route.endMileage)}</p>
                   </div>
                 </div>
                 <div className="mt-2">
                   <Badge variant="secondary">
-                    {formatMileage(mileage)} miles total
+                    {formatMileage(mileage)} km total
                   </Badge>
                 </div>
               </div>
@@ -148,18 +128,21 @@ export default function RouteDetailPage() {
 
         {/* Right Column - Map */}
         <div className="lg:flex lg:flex-col">
-          <Card>
+          <Card className="h-full flex flex-col">
             <CardHeader>
               <CardTitle>Route Map</CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
-              <div className="h-[400px]">
-                <RouteMap 
-                  fromPlace={fromPlace} 
-                  toPlace={toPlace} 
-                  mileage={mileage}
+            <CardContent className="flex-1 p-6 pt-0">
+              {fromPlace && toPlace ? (
+                <StaticRouteMap
+                  start={{ lat: fromPlace.latitude, lng: fromPlace.longitude }}
+                  end={{ lat: toPlace.latitude, lng: toPlace.longitude }}
                 />
-              </div>
+              ) : (
+                <div className="min-h-[400px] h-full">
+                  <div className="w-full h-full animate-pulse rounded-md bg-muted" />
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

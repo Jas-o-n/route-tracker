@@ -1,10 +1,10 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { ClerkProvider } from '@clerk/nextjs';
+import { clerkAppearance } from '@/lib/clerkAppearance';
 import { ThemeProvider } from '@/providers/ThemeProvider';
-import { ClerkProvider } from '@clerk/nextjs'
 import QueryProvider from '@/providers/QueryProvider';
-import Header from '@/components/Header';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -19,15 +19,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider appearance={clerkAppearance}>
       <html lang="en" suppressHydrationWarning>
         <body className={inter.className}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <QueryProvider>
-              <Header />
+          <QueryProvider>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
               {children}
-            </QueryProvider>
-          </ThemeProvider>
+            </ThemeProvider>
+          </QueryProvider>
         </body>
       </html>
     </ClerkProvider>

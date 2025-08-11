@@ -10,6 +10,7 @@ import { DayButton, DayPicker, getDefaultClassNames } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 function Calendar({
   className,
@@ -162,6 +163,31 @@ function Calendar({
             </td>
           )
         },
+        Dropdown: ({ value, options, onChange, ...props }) => {
+          return (
+            <Select
+              value={value?.toString()}
+              onValueChange={val => {
+                if (onChange) {
+                  onChange({ target: { value: val } });
+                }
+              }}
+            >
+              <SelectTrigger className="w-[80px] max-w-[120px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-48 overflow-y-auto">
+                <SelectGroup>
+                  {options?.map(option => (
+                    <SelectItem key={option.value} value={option.value.toString()} disabled={option.disabled}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          );
+        },
         ...components,
       }}
       {...props}
@@ -187,7 +213,7 @@ function CalendarDayButton({
       ref={ref}
       variant="ghost"
       size="icon"
-      data-day={day.date.toLocaleDateString()}
+      data-day={`${String(day.date.getDate()).padStart(2,'0')}/${String(day.date.getMonth()+1).padStart(2,'0')}/${day.date.getFullYear()}`}
       data-selected-single={
         modifiers.selected &&
         !modifiers.range_start &&

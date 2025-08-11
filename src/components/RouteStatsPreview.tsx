@@ -3,7 +3,6 @@
 import { Car, Route as RouteIcon, MapPin, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRouteStats } from "@/hooks/useRoutes";
 import { RouteStats } from "@/lib/schemas/routes";
 
 interface RouteStatsPreviewProps {
@@ -11,26 +10,7 @@ interface RouteStatsPreviewProps {
 }
 
 export default function RouteStatsPreview({ initialStats }: RouteStatsPreviewProps) {
-  const { data: stats, isLoading } = useRouteStats();
-  const currentStats = stats || initialStats;
-
-  if (isLoading && !initialStats) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i}>
-            <CardContent className="p-6">
-              <Skeleton className="h-10 w-10 rounded-full mb-4" />
-              <Skeleton className="h-7 w-3/4 mb-2" />
-              <Skeleton className="h-4 w-1/2" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
-
-  if (!currentStats) {
+  if (!initialStats) {
     return (
       <Card>
         <CardContent className="p-6 text-center">
@@ -43,31 +23,28 @@ export default function RouteStatsPreview({ initialStats }: RouteStatsPreviewPro
   const statCards = [
     {
       title: "Total Routes",
-      value: currentStats.totalRoutes,
+      value: initialStats.totalRoutes,
       icon: <RouteIcon className="h-6 w-6" />,
       color: "text-blue-500",
       bgColor: "bg-blue-50 dark:bg-blue-950",
     },
     {
-      title: "Total Miles",
-      value: `${currentStats.totalMiles.toLocaleString()} mi`,
+      title: "Total Kilometers",
+      value: `${initialStats.totalKilometers.toLocaleString()} km`,
       icon: <Car className="h-6 w-6" />,
       color: "text-teal-500",
       bgColor: "bg-teal-50 dark:bg-teal-950",
     },
     {
-      title: "Most Frequent Route",
-      value: currentStats.mostFrequentRoute
-        ? `${currentStats.mostFrequentRoute.fromName} → ${currentStats.mostFrequentRoute.toName}`
-        : "N/A",
-      subtitle: currentStats.mostFrequentRoute ? `${currentStats.mostFrequentRoute.count} times` : "",
+      title: "Total Today",
+      value: `${initialStats.totalKilometersToday.toLocaleString()} km`,
       icon: <MapPin className="h-6 w-6" />,
       color: "text-orange-500",
       bgColor: "bg-orange-50 dark:bg-orange-950",
     },
     {
-      title: "Avg. Miles per Route",
-      value: `${currentStats.avgMileagePerRoute.toFixed(1)} mi`,
+      title: "Total This Month",
+      value: `${initialStats.totalKilometersThisMonth.toLocaleString()} km`,
       icon: <TrendingUp className="h-6 w-6" />,
       color: "text-purple-500",
       bgColor: "bg-purple-50 dark:bg-purple-950",
@@ -86,7 +63,6 @@ export default function RouteStatsPreview({ initialStats }: RouteStatsPreviewPro
             </div>
             <h3 className="text-lg font-medium">{stat.title}</h3>
             <p className="text-2xl font-bold">{stat.value}</p>
-            {stat.subtitle && <p className="text-sm text-muted-foreground">{stat.subtitle}</p>}
           </CardContent>
         </Card>
       ))}

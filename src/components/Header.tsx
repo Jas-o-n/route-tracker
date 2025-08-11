@@ -12,16 +12,11 @@ import {
   SheetHeader,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from "@clerk/nextjs";
+import { SignedIn, UserButton } from "@clerk/nextjs";
+import { clerkDarkAppearance, clerkLightAppearance } from '@/lib/clerkAppearance';
 
 const links = [
-  { href: "/", label: "Home", icon: Home },
+  { href: "/dashboard", label: "Home", icon: Home },
   { href: "/routes", label: "Routes", icon: MapPin },
   { href: "/routes/new", label: "Add Route", icon: Plus },
   { href: "/places", label: "Places", icon: MapPin },
@@ -30,8 +25,9 @@ const links = [
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme } = useTheme();
   const [isMounted, setIsMounted] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -55,8 +51,8 @@ export default function Header() {
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="rounded-md bg-primary/10 p-1">
+            <Link href="/dashboard" className="flex items-center gap-2">
+              <div className="rounded-md p-1">
                 <MapPin className="h-5 w-5 text-primary" />
               </div>
               <span className="text-lg font-bold">RouteTracker</span>
@@ -92,7 +88,7 @@ export default function Header() {
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                 className="mr-2"
               >
-                {theme === "dark" ? (
+                {(resolvedTheme ?? theme) === "dark" ? (
                   <Sun className="h-5 w-5" />
                 ) : (
                   <Moon className="h-5 w-5" />
@@ -101,30 +97,13 @@ export default function Header() {
               </Button>
             )}
 
-            {/* Clerk Auth Buttons */}
-            <SignedOut>
-              <SignInButton>
-                <Button variant="outline" className="h-10 px-4">
-                  Sign In
-                </Button>
-              </SignInButton>
-              <SignUpButton>
-                <Button className="bg-[#6c47ff] text-white rounded-full font-medium text-sm sm:text-base h-10 px-4 ml-2">
-                  Sign Up
-                </Button>
-              </SignUpButton>
-            </SignedOut>
+            {/* User Button for Signed-In Users */}
             <SignedIn>
-              <UserButton
-                appearance={{
-                  elements: { userButtonAvatarBox: "h-10 w-10" },
-                }}
-                afterSignOutUrl="/"
-              />
+              <UserButton appearance={(resolvedTheme ?? theme) === 'dark' ? clerkDarkAppearance : clerkLightAppearance}/>
             </SignedIn>
 
             {/* Mobile Menu */}
-            <Sheet>
+            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
               <SheetTrigger asChild className="md:hidden">
                 <Button variant="ghost" size="icon">
                   <Menu className="h-5 w-5" />
@@ -152,6 +131,7 @@ export default function Header() {
                             ? "font-medium text-primary"
                             : "text-muted-foreground"
                         }`}
+                        onClick={() => setIsSheetOpen(false)} // NEW: close Sheet on link click
                       >
                         <Icon className="h-4 w-4" />
                         {link.label}

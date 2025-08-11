@@ -13,7 +13,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { usePlaces } from "@/hooks/usePlaces";
+import type { Place } from "@/lib/schemas/places";
 
 interface PlaceSelectProps {
   value: string; // This will be the UUID
@@ -21,6 +21,7 @@ interface PlaceSelectProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   placeholder?: string;
+  places: Place[]; // Now required
 }
 
 export function PlaceSelect({
@@ -29,9 +30,9 @@ export function PlaceSelect({
   open,
   onOpenChange,
   placeholder = "Select place",
+  places,
 }: PlaceSelectProps) {
-  const { places } = usePlaces();
-  const selectedPlace = places.find(place => place.id === value);
+  const selectedPlace = places.find((place: Place) => place.id === value);
 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
@@ -39,15 +40,14 @@ export function PlaceSelect({
         <Button
           variant="outline"
           role="combobox"
-          className="w-full justify-between"
+          className="w-full justify-between relative pl-14"
         >
-          <div className="flex flex-col items-start text-left">
-            <div className="flex items-center">
-              <MapPin className="mr-2 h-4 w-4 shrink-0" />
-              {selectedPlace ? selectedPlace.name : placeholder}
-            </div>
+          {/* Absolutely positioned icon */}
+          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 shrink-0 text-muted-foreground pointer-events-none" />
+          <div className="flex flex-col text-left w-full">
+            <span className="font-medium truncate">{selectedPlace ? selectedPlace.name : placeholder}</span>
             {selectedPlace && (
-              <span className="ml-6 text-sm text-muted-foreground">
+              <span className="text-sm text-muted-foreground truncate">
                 {selectedPlace.full_address}
               </span>
             )}
@@ -59,7 +59,7 @@ export function PlaceSelect({
           <CommandInput placeholder="Search places..." />
           <CommandEmpty>No place found.</CommandEmpty>
           <CommandGroup>
-            {places.map((place) => (
+            {places.map((place: Place) => (
               <CommandItem
                 key={place.id}
                 onSelect={() => {
