@@ -115,7 +115,7 @@ export default function AddressInput({
             onChange={(e) => handleAddressChange(e.target.value)}
             disabled={isLoading}
             onFocus={() => setIsSuggestionsOpen(true)}
-            className={searchError ? 'border-destructive' : ''}
+            className={`pr-10 ${searchError ? 'border-destructive' : ''}`}
             aria-expanded={isSuggestionsOpen}
             aria-controls={isSuggestionsOpen ? 'address-suggestions' : undefined}
           />
