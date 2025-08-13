@@ -136,8 +136,8 @@ export default function AddressInput({
         </div>
       </div>
       {minimapFeature && (
-        <div className="h-[300px] w-full relative mt-4 rounded-md overflow-hidden bg-secondary">
-          <AddressMinimap
+        <div className="h-[300px] w-full relative mt-4 rounded-md overflow-hidden bg-secondary touch-none [&_*]:touch-none">
+            <AddressMinimap
             {...{
               feature: convertToGeoJSONFeature(minimapFeature),
               show: true,
