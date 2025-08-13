@@ -115,7 +115,7 @@ export default function AddressInput({
             onChange={(e) => handleAddressChange(e.target.value)}
             disabled={isLoading}
             onFocus={() => setIsSuggestionsOpen(true)}
-            className={searchError ? 'border-destructive' : ''}
+            className={`pr-10 ${searchError ? 'border-destructive' : ''}`}
             aria-expanded={isSuggestionsOpen}
             aria-controls={isSuggestionsOpen ? 'address-suggestions' : undefined}
           />
@@ -136,8 +136,8 @@ export default function AddressInput({
         </div>
       </div>
       {minimapFeature && (
-        <div className="h-[300px] w-full relative mt-4 rounded-md overflow-hidden bg-secondary">
-          <AddressMinimap
+        <div className="h-[300px] w-full relative mt-4 rounded-md overflow-hidden bg-secondary touch-none [&_*]:touch-none">
+            <AddressMinimap
             {...{
               feature: convertToGeoJSONFeature(minimapFeature),
               show: true,

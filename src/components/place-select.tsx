@@ -54,11 +54,11 @@ export function PlaceSelect({
           </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="p-0">
+      <PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)] max-h-[300px]">
         <Command>
-          <CommandInput placeholder="Search places..." />
+          <CommandInput placeholder="Search places..." className="sticky top-0 z-10" />
           <CommandEmpty>No place found.</CommandEmpty>
-          <CommandGroup>
+          <CommandGroup className="max-h-[250px] overflow-y-auto">
             {places.map((place: Place) => (
               <CommandItem
                 key={place.id}
