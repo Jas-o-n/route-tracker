@@ -21,6 +21,9 @@ export default function RootLayout({
   return (
     <ClerkProvider appearance={clerkAppearance}>
       <html lang="en" suppressHydrationWarning>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=overlays-content" />
+        </head>
         <body className={inter.className}>
           <QueryProvider>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
