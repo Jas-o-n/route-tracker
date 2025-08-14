@@ -20,6 +20,9 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider appearance={clerkAppearance}>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=overlays-content" />
+      </head>
       <html lang="en" suppressHydrationWarning>
         <body className={inter.className}>
           <QueryProvider>
