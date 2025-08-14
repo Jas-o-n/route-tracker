@@ -54,7 +54,7 @@ export function PlaceSelect({
           </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)] max-h-[300px]" side="bottom" avoidCollisions={false}>
+      <PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)] max-h-[300px]" side="bottom" avoidCollisions={false} style={{ position: "fixed" }}>
         <Command>
           <CommandInput placeholder="Search places..." className="sticky top-0 z-10" />
           <CommandEmpty>No place found.</CommandEmpty>
