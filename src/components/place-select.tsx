@@ -71,9 +71,10 @@ export function PlaceSelect({
             {places.map((place: Place) => (
               <CommandItem
                 key={place.id}
-                value={place.name}
+                value={`${place.name}::${place.id}`}
                 onSelect={(selected: string) => {
-                  onChange(selected);
+                  const id = selected.split("::").pop() ?? selected;
+                  onChange(id);
                   onOpenChange(false);
                 }}
                 className="flex items-start gap-3 px-3 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer"
