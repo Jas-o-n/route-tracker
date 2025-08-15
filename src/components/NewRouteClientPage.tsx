@@ -57,8 +57,6 @@ export default function NewRouteClientPage({ places }: NewRouteClientPageProps) 
     defaultValues: {
       fromPlaceId: "",
       toPlaceId: "",
-      startMileage: 0,
-      endMileage: 0,
       date: new Date().toISOString(),
       notes: "",
       isWork: true,
@@ -76,7 +74,7 @@ export default function NewRouteClientPage({ places }: NewRouteClientPageProps) 
 
   useEffect(() => {
     const currentValue = form.getValues('startMileage');
-    if (!currentValue && recent?.route?.endMileage != null) {
+    if ((currentValue == null) && recent?.route?.endMileage != null) {
       form.setValue('startMileage', recent.route.endMileage, { shouldDirty: false });
     }
   }, [recent, form]);
@@ -155,10 +153,11 @@ export default function NewRouteClientPage({ places }: NewRouteClientPageProps) 
                       <FormControl>
                         <Input
                           type="number"
-                          {...field}
-                           onChange={(e) =>
-                            field.onChange(e.target.valueAsNumber)
-                          }
+                          value={field.value ?? ""}
+                          onChange={(e) => {
+                            const v = e.currentTarget.value;
+                            field.onChange(v === "" ? (undefined as unknown as number) : Number(v));
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -175,10 +174,11 @@ export default function NewRouteClientPage({ places }: NewRouteClientPageProps) 
                       <FormControl>
                         <Input
                           type="number"
-                          {...field}
-                           onChange={(e) =>
-                            field.onChange(e.target.valueAsNumber)
-                          }
+                          value={field.value ?? ""}
+                          onChange={(e) => {
+                            const v = e.currentTarget.value;
+                            field.onChange(v === "" ? (undefined as unknown as number) : Number(v));
+                          }}
                         />
                       </FormControl>
                       <FormMessage />

@@ -32,15 +32,15 @@ const SuggestionList: React.FC<SuggestionListProps> = ({
               type="button"
               role="option"
               aria-selected={index === activeIndex}
-              className={`w-full px-4 py-3 text-left flex items-start gap-3 ${
+              className={`w-full px-4 py-3 text-left flex items-center gap-3 ${
                 index === activeIndex ? 'bg-accent' : 'hover:bg-accent/50'
               }`}
               onClick={() => onSelect(suggestion)}
               onMouseEnter={() => onHover(index)}
             >
-              <MapPin className="mt-1 h-4 w-4 flex-shrink-0 text-muted-foreground" />
+              <MapPin className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
               <div className="flex flex-col gap-0.5">
-                <span className="font-medium text-sm">{mainText}</span>
+                <span className="font-medium text-sm leading-tight">{mainText}</span>
                 <span className="text-xs text-muted-foreground">{secondaryText}</span>
               </div>
             </button>
