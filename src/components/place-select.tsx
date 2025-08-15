@@ -77,16 +77,16 @@ export function PlaceSelect({
                   onChange(id);
                   onOpenChange(false);
                 }}
-                className="flex items-start gap-3 px-3 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                className="flex items-center gap-3 px-3 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer"
               >
                 <Check
                   className={cn(
-                    "mt-1 h-4 w-4 text-primary",
+                    "h-4 w-4 flex-shrink-0 text-primary",
                     value === place.id ? "opacity-100" : "opacity-0"
                   )}
                 />
                 <div className="flex flex-col min-w-0">
-                  <span className="truncate">{place.name}</span>
+                  <span className="truncate leading-tight">{place.name}</span>
                   <span className="text-sm text-muted-foreground truncate">
                     {place.full_address}
                   </span>
