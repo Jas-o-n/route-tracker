@@ -193,11 +193,11 @@ export default function NewRouteClientPage({ places }: NewRouteClientPageProps) 
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between rounded-lg border p-3">
                     <div className="space-y-0.5">
-                      <FormLabel>Work trip</FormLabel>
-                      <p className="text-sm text-muted-foreground">Toggle on for work, off for private.</p>
+                      <FormLabel>Private trip</FormLabel>
+                      <p className="text-sm text-muted-foreground">Toggle on for private, off for work.</p>
                     </div>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch checked={!field.value} onCheckedChange={(checked) => field.onChange(!checked)} />
                     </FormControl>
                   </FormItem>
                 )}
