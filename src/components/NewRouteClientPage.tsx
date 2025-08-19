@@ -20,6 +20,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PlaceSelect } from "@/components/place-select";
 import { useAddRoute } from "@/hooks/useRoutes";
 import { useToast } from "@/hooks/use-toast";
@@ -57,18 +59,31 @@ export default function NewRouteClientPage({ places }: NewRouteClientPageProps) 
     defaultValues: {
       fromPlaceId: "",
       toPlaceId: "",
-      date: new Date().toISOString(),
+  date: new Date().toISOString(),
       notes: "",
       isWork: true,
     },
   });
+
+  function isYYYYMMDD(dateString: string): boolean {
+    return /^\d{4}-\d{2}-\d{2}$/.test(dateString);
+  }
+
+  function parseYMDToLocalDate(dateString: string): Date | null {
+    if (!isYYYYMMDD(dateString)) return null;
+    const [yearStr, monthStr, dayStr] = dateString.split("-");
+    const year = Number(yearStr);
+    const monthIndex = Number(monthStr) - 1;
+    const day = Number(dayStr);
+    return new Date(year, monthIndex, day);
+  }
 
   const { data: recent, isLoading: isLoadingRecent } = useQuery({
     queryKey: ['recentRoute'],
     queryFn: async () => {
       const res = await fetch('/api/routes/recent');
       if (!res.ok) throw new Error('Failed to fetch recent route');
-      return (await res.json()) as { route: { endMileage: number } | null };
+      return (await res.json()) as { route: { endMileage?: number; toPlaceId?: string } | null };
     },
   });
 
@@ -76,6 +91,13 @@ export default function NewRouteClientPage({ places }: NewRouteClientPageProps) 
     const currentValue = form.getValues('startMileage');
     if ((currentValue == null) && recent?.route?.endMileage != null) {
       form.setValue('startMileage', recent.route.endMileage, { shouldDirty: false });
+    }
+  }, [recent, form]);
+
+  useEffect(() => {
+    const currentFrom = form.getValues('fromPlaceId');
+    if ((currentFrom == null || currentFrom === '') && recent?.route?.toPlaceId) {
+      form.setValue('fromPlaceId', recent.route.toPlaceId, { shouldDirty: false });
     }
   }, [recent, form]);
   
@@ -189,15 +211,71 @@ export default function NewRouteClientPage({ places }: NewRouteClientPageProps) 
 
               <FormField
                 control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start font-normal"
+                          >
+                            {field.value ? (
+                              (() => {
+                                if (isYYYYMMDD(field.value)) {
+                                  const d = parseYMDToLocalDate(field.value);
+                                  return d ? `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}` : field.value;
+                                }
+                                // try ISO datetime
+                                const d = new Date(field.value);
+                                return isNaN(d.getTime()) ? field.value : `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+                              })()
+                            ) : (
+                              "Select date"
+                            )}
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value
+                            ? (isYYYYMMDD(field.value)
+                                ? parseYMDToLocalDate(field.value) ?? undefined
+                                : new Date(field.value))
+                            : undefined}
+                          onSelect={(date) => {
+                            if (date) {
+                              // store an ISO datetime string (Z) to satisfy zod.datetime()
+                              const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                              field.onChange(d.toISOString());
+                            } else {
+                              field.onChange('');
+                            }
+                          }}
+                          disabled={(date) => date > new Date()}
+                          autoFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
                 name="isWork"
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between rounded-lg border p-3">
                     <div className="space-y-0.5">
-                      <FormLabel>Work trip</FormLabel>
-                      <p className="text-sm text-muted-foreground">Toggle on for work, off for private.</p>
+                      <FormLabel>Private trip</FormLabel>
+                      <p className="text-sm text-muted-foreground">Toggle on for private, off for work.</p>
                     </div>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch checked={!field.value} onCheckedChange={(checked) => field.onChange(!checked)} />
                     </FormControl>
                   </FormItem>
                 )}

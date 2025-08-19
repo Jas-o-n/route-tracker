@@ -24,7 +24,7 @@ interface RoutesClientPageProps {
 
 export default function RoutesClientPage({ routes, places }: RoutesClientPageProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("date-desc");
+  const [sortBy, setSortBy] = useState("kilometer-desc");
 
   // Optionally, filter/sort here if you want to pass only filtered data to RoutesList
   // Or, let RoutesList handle it if it already does
@@ -60,10 +60,10 @@ export default function RoutesClientPage({ routes, places }: RoutesClientPagePro
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="date-desc">Newest First</SelectItem>
-              <SelectItem value="date-asc">Oldest First</SelectItem>
               <SelectItem value="kilometer-desc">Highest Mileage</SelectItem>
               <SelectItem value="kilometer-asc">Lowest Mileage</SelectItem>
+              <SelectItem value="date-desc">Newest First</SelectItem>
+              <SelectItem value="date-asc">Oldest First</SelectItem>
             </SelectContent>
           </Select>
         </div>
