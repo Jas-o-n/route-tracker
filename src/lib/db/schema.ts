@@ -11,7 +11,6 @@ export const places = pgTable("places", {
   region: text("region"),
   postcode: text("postcode"),
   country: text("country"),
-  // High precision coordinates stored as decimal
   latitude: decimal("latitude", { precision: 10, scale: 7 }).notNull(),
   longitude: decimal("longitude", { precision: 10, scale: 7 }).notNull(),
   userID: text("user_id").notNull(),
@@ -21,11 +20,10 @@ export const places = pgTable("places", {
 
 export const routes = pgTable("routes", {
   id: uuid("id").defaultRandom().primaryKey(),
-  fromPlaceId: uuid("from_place_id").references(() => places.id).notNull(),
-  toPlaceId: uuid("to_place_id").references(() => places.id).notNull(),
+  fromPlaceId: uuid("from_place_id").references(() => places.id),
+  toPlaceId: uuid("to_place_id").references(() => places.id),
   startMileage: integer("start_mileage").notNull(),
   endMileage: integer("end_mileage").notNull(),
-  // We'll calculate the distance in the application layer
   distance: integer("distance").notNull(),
   date: timestamp("date").defaultNow().notNull(),
   notes: text("notes"),

@@ -2,8 +2,8 @@ import { z } from "zod";
 
 // Base route schema with common fields and validation
 const baseRouteFields = {
-  fromPlaceId: z.string().uuid(),
-  toPlaceId: z.string().uuid(),
+  fromPlaceId: z.string().uuid().nullable(),
+  toPlaceId: z.string().uuid().nullable(),
   startMileage: z.number().int().nonnegative(),
   endMileage: z.number().int().nonnegative(),
   date: z.string().datetime(),
@@ -25,7 +25,7 @@ const validateMileage = (schema: any) =>
 export const routeModelSchema = validateMileage(
   z.object({
     id: z.string().uuid(),
-    ...baseRouteFields,
+  ...baseRouteFields,
     date: z.date(), // Override date type for DB
     distance: z.number().int(),
     userID: z.string(),
@@ -37,8 +37,8 @@ export const routeModelSchema = validateMileage(
 // API/Frontend schema (with ISO strings)
 export const routeSchema = z.object({
   id: z.string().uuid(),
-  fromPlaceId: z.string().uuid(),
-  toPlaceId: z.string().uuid(),
+  fromPlaceId: z.string().uuid().nullable(),
+  toPlaceId: z.string().uuid().nullable(),
   startMileage: z.number().int(),
   endMileage: z.number().int(),
   distance: z.number().int(),
@@ -59,7 +59,31 @@ export const routeWithStatsSchema = routeSchema.extend({
 });
 
 // Form data schema
-export const routeFormSchema = validateMileage(z.object({ ...baseRouteFields }));
+const placeOrEmpty = z.union([z.string().uuid(), z.literal("")]);
+
+export const routeFormSchema = validateMileage(
+  z
+    .object({
+      fromPlaceId: placeOrEmpty,
+      toPlaceId: placeOrEmpty,
+      startMileage: baseRouteFields.startMileage,
+      endMileage: baseRouteFields.endMileage,
+      date: baseRouteFields.date,
+      notes: baseRouteFields.notes,
+      isWork: baseRouteFields.isWork,
+    })
+    .superRefine((data, ctx) => {
+      // If this is a work trip (isWork === true) both places must be provided as UUIDs.
+      if (data.isWork) {
+        if (!data.fromPlaceId || data.fromPlaceId === "") {
+          ctx.addIssue({ path: ["fromPlaceId"], code: z.ZodIssueCode.custom, message: "Start location is required for work trips" });
+        }
+        if (!data.toPlaceId || data.toPlaceId === "") {
+          ctx.addIssue({ path: ["toPlaceId"], code: z.ZodIssueCode.custom, message: "Destination is required for work trips" });
+        }
+      }
+    })
+);
 
 // Update route schema (all fields optional)
 export const updateRouteSchema = z.object({

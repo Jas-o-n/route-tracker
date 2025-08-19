@@ -138,6 +138,7 @@ export default function NewRouteClientPage({ places }: NewRouteClientPageProps) 
                         open={openStart}
                         onOpenChange={setOpenStart}
                         places={places}
+                        optional={!form.getValues('isWork')}
                       />
                     </FormControl>
                     <FormMessage />
@@ -158,6 +159,7 @@ export default function NewRouteClientPage({ places }: NewRouteClientPageProps) 
                         open={openDest}
                         onOpenChange={setOpenDest}
                         places={places}
+                        optional={!form.getValues('isWork')}
                       />
                     </FormControl>
                     <FormMessage />
@@ -275,7 +277,19 @@ export default function NewRouteClientPage({ places }: NewRouteClientPageProps) 
                       <p className="text-sm text-muted-foreground">Toggle on for private, off for work.</p>
                     </div>
                     <FormControl>
-                      <Switch checked={!field.value} onCheckedChange={(checked) => field.onChange(!checked)} />
+                      <Switch
+                        checked={!field.value}
+                        onCheckedChange={(checked) => {
+                          const newIsWork = !checked;
+                          field.onChange(newIsWork);
+                          if (!newIsWork) {
+                            form.setValue('fromPlaceId', '');
+                            form.setValue('toPlaceId', '');
+                            setOpenStart(false);
+                            setOpenDest(false);
+                          }
+                        }}
+                      />
                     </FormControl>
                   </FormItem>
                 )}
