@@ -250,14 +250,17 @@ export default function NewRouteClientPage({ places }: NewRouteClientPageProps) 
                             : undefined}
                           onSelect={(date) => {
                             if (date) {
-                              // store an ISO datetime string (Z) to satisfy zod.datetime()
-                              const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                              const d = new Date(Date.UTC(
+                                date.getFullYear(),
+                                date.getMonth(),
+                                date.getDate(),
+                                12, 0, 0
+                              ));
                               field.onChange(d.toISOString());
                             } else {
                               field.onChange('');
                             }
-                          }}
-                          disabled={(date) => date > new Date()}
+                          }}                          disabled={(date) => date > new Date()}
                           autoFocus
                         />
                       </PopoverContent>

@@ -43,7 +43,7 @@ export function PlaceSelect({
           variant="outline"
           role="combobox"
           className={cn("w-full justify-start relative pl-12 pr-3 py-2", optional ? "opacity-60" : "")}
-          aria-disabled={optional}
+          disabled={optional}
         >
           {/* Absolutely positioned icon */}
           <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 shrink-0 text-muted-foreground pointer-events-none" />

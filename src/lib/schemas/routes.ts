@@ -59,13 +59,13 @@ export const routeWithStatsSchema = routeSchema.extend({
 });
 
 // Form data schema
-const placeOrEmpty = z.union([z.string().uuid(), z.literal("")]);
+const placeNullable = z.preprocess((val) => (val === "" ? null : val), z.string().uuid().nullable());
 
 export const routeFormSchema = validateMileage(
   z
     .object({
-      fromPlaceId: placeOrEmpty,
-      toPlaceId: placeOrEmpty,
+      fromPlaceId: placeNullable,
+      toPlaceId: placeNullable,
       startMileage: baseRouteFields.startMileage,
       endMileage: baseRouteFields.endMileage,
       date: baseRouteFields.date,
@@ -73,12 +73,12 @@ export const routeFormSchema = validateMileage(
       isWork: baseRouteFields.isWork,
     })
     .superRefine((data, ctx) => {
-      // If this is a work trip (isWork === true) both places must be provided as UUIDs.
+      // If this is a work trip (isWork === true) both places must be provided as non-null UUIDs.
       if (data.isWork) {
-        if (!data.fromPlaceId || data.fromPlaceId === "") {
+        if (data.fromPlaceId == null) {
           ctx.addIssue({ path: ["fromPlaceId"], code: z.ZodIssueCode.custom, message: "Start location is required for work trips" });
         }
-        if (!data.toPlaceId || data.toPlaceId === "") {
+        if (data.toPlaceId == null) {
           ctx.addIssue({ path: ["toPlaceId"], code: z.ZodIssueCode.custom, message: "Destination is required for work trips" });
         }
       }
