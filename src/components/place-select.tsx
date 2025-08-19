@@ -22,6 +22,7 @@ interface PlaceSelectProps {
   onOpenChange: (open: boolean) => void;
   placeholder?: string;
   places: Place[]; // Now required
+  optional?: boolean; // when true, indicates the place is optional/disabled (e.g., private trip)
 }
 
 export function PlaceSelect({
@@ -31,6 +32,7 @@ export function PlaceSelect({
   onOpenChange,
   placeholder = "Select place",
   places,
+  optional = false,
 }: PlaceSelectProps) {
   const selectedPlace = places.find((place: Place) => place.id === value);
 
@@ -40,16 +42,22 @@ export function PlaceSelect({
         <Button
           variant="outline"
           role="combobox"
-          className="w-full justify-start relative pl-12 pr-3 py-2"
+          className={cn("w-full justify-start relative pl-12 pr-3 py-2", optional ? "opacity-60" : "")}
+          disabled={optional}
         >
           {/* Absolutely positioned icon */}
           <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 shrink-0 text-muted-foreground pointer-events-none" />
           <div className="flex flex-col text-left w-full min-w-0">
-            <span className="font-medium truncate">{selectedPlace ? selectedPlace.name : placeholder}</span>
+            <span className={cn("font-medium truncate", optional ? "line-through text-muted-foreground" : "")}>
+              {selectedPlace ? selectedPlace.name : placeholder}
+            </span>
             {selectedPlace && (
-              <span className="text-sm text-muted-foreground truncate">
+              <span className={cn("text-sm truncate", optional ? "line-through text-muted-foreground" : "text-muted-foreground")}>
                 {selectedPlace.full_address}
               </span>
+            )}
+            {!selectedPlace && optional && (
+              <span className="text-sm text-muted-foreground">Not saved for private routes</span>
             )}
           </div>
         </Button>

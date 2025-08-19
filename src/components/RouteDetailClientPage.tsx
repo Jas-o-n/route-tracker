@@ -6,7 +6,6 @@ import { ArrowLeft, Calendar, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { formatDate } from "@/lib/utils";
 import StaticRouteMap from "@/components/StaticRouteMap";
 import { DeleteButton } from "@/components/DeleteButton";
@@ -15,9 +14,7 @@ import type { Place } from "@/lib/schemas/places";
 import { useDeleteRoute } from "@/hooks/useRoutes";
 
 function formatMileage(value: number | undefined | null): string {
-  if (typeof value !== 'number' || isNaN(value)) {
-    return '0';
-  }
+  if (typeof value !== "number" || isNaN(value)) return "0";
   return value.toLocaleString();
 }
 
@@ -33,8 +30,8 @@ export default function RouteDetailClientPage({ route, places }: Props) {
     router.refresh();
   });
 
-  const fromPlace = places.find(p => p.id === route.fromPlaceId);
-  const toPlace = places.find(p => p.id === route.toPlaceId);
+  const fromPlace = route.fromPlaceId ? places.find((p) => p.id === route.fromPlaceId) : undefined;
+  const toPlace = route.toPlaceId ? places.find((p) => p.id === route.toPlaceId) : undefined;
   const start = route.startMileage;
   const end = route.endMileage;
   const mileage =
@@ -67,35 +64,50 @@ export default function RouteDetailClientPage({ route, places }: Props) {
         {/* Left Column - Route Info and Stats */}
         <div className="space-y-6">
           {/* Route Information */}
-          <Card className="h-full">
+          <Card className="h-full flex flex-col">
             <CardHeader>
               <CardTitle>Route Information</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-start gap-2">
-                <Calendar className="h-4 w-4 mt-1 text-muted-foreground shrink-0" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Date</p>
-                  <p className="font-medium">{formatDate(route.date)}</p>
+            <CardContent className="space-y-4 flex-1 flex flex-col justify-between">
+              <div>
+                <div className="flex items-start gap-2">
+                  <Calendar className="h-4 w-4 mt-1 text-muted-foreground shrink-0" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Date</p>
+                    <p className="font-medium">{formatDate(route.date)}</p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex items-start gap-2">
-                <MapPin className="h-4 w-4 mt-1 text-muted-foreground shrink-0" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Start Location</p>
-                  <p className="font-medium">{fromPlace?.name}</p>
-                  <p className="text-sm text-muted-foreground">{fromPlace?.full_address}</p>
-                </div>
-              </div>
+                {/* Show from/to place blocks only when present. If both missing (private route), show a single muted hint. */}
+                {(!fromPlace && !toPlace) ? (
+                  <div className="py-4">
+                    <p className="text-sm text-muted-foreground">This route is private — locations are hidden.</p>
+                  </div>
+                ) : (
+                  <>
+                    {fromPlace && (
+                      <div className="flex items-start gap-2 mt-4">
+                        <MapPin className="h-4 w-4 mt-1 text-muted-foreground shrink-0" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Start Location</p>
+                          <p className="font-medium">{fromPlace.name}</p>
+                          <p className="text-sm text-muted-foreground">{fromPlace.full_address}</p>
+                        </div>
+                      </div>
+                    )}
 
-              <div className="flex items-start gap-2">
-                <MapPin className="h-4 w-4 mt-1 text-muted-foreground shrink-0" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Destination</p>
-                  <p className="font-medium">{toPlace?.name}</p>
-                  <p className="text-sm text-muted-foreground">{toPlace?.full_address}</p>
-                </div>
+                    {toPlace && (
+                      <div className="flex items-start gap-2 mt-4">
+                        <MapPin className="h-4 w-4 mt-1 text-muted-foreground shrink-0" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Destination</p>
+                          <p className="font-medium">{toPlace.name}</p>
+                          <p className="text-sm text-muted-foreground">{toPlace.full_address}</p>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               <div className="pt-4 border-t">

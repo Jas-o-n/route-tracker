@@ -38,13 +38,18 @@ export async function createRoute(data: RouteFormData): Promise<Route> {
   const validatedData = routeFormSchema.parse(data);
   const distance = validatedData.endMileage - validatedData.startMileage;
 
+  // Convert empty-string place ids (used by private trips) to null for DB
+  const dbData: any = {
+    ...validatedData,
+    fromPlaceId: validatedData.isWork === false ? null : (validatedData.fromPlaceId === "" ? null : validatedData.fromPlaceId),
+    toPlaceId: validatedData.isWork === false ? null : (validatedData.toPlaceId === "" ? null : validatedData.toPlaceId),
+    distance,
+    date: new Date(validatedData.date),
+    userID: userId,
+  };
+
   const [newRoute] = await db.insert(routes)
-    .values({
-      ...validatedData,
-      distance,
-      date: new Date(validatedData.date),
-      userID: userId,
-    })
+    .values(dbData)
     .returning();
 
   revalidatePath("/routes");
@@ -79,8 +84,23 @@ export async function updateRoute(id: string, data: Partial<RouteFormData>): Pro
     updateData.distance = end - start;
   }
 
+  const willBePrivate = (updateData.isWork === false) || (updateData.isWork === undefined && existingRoute.isWork === false);
+
+  const setData: any = { ...updateData };
+  if (willBePrivate) {
+    setData.fromPlaceId = null;
+    setData.toPlaceId = null;
+  } else {
+    if ((updateData as any).fromPlaceId !== undefined) {
+      setData.fromPlaceId = (updateData as any).fromPlaceId === "" ? null : (updateData as any).fromPlaceId;
+    }
+    if ((updateData as any).toPlaceId !== undefined) {
+      setData.toPlaceId = (updateData as any).toPlaceId === "" ? null : (updateData as any).toPlaceId;
+    }
+  }
+
   const [updatedRoute] = await db.update(routes)
-    .set(updateData)
+    .set(setData)
     .where(eq(routes.id, id))
     .returning();
 
