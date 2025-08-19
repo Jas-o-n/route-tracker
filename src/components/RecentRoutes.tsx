@@ -26,13 +26,13 @@ export default async function RecentRoutes() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {routes.map((route) => {
-        const fromPlace = places.find(p => p.id === route.fromPlaceId);
-        const toPlace = places.find(p => p.id === route.toPlaceId);
+        const fromPlace = route.fromPlaceId ? places.find(p => p.id === route.fromPlaceId) : undefined;
+        const toPlace = route.toPlaceId ? places.find(p => p.id === route.toPlaceId) : undefined;
         const mileage = route.endMileage - route.startMileage;
 
         return (
-          <Card key={route.id} className="overflow-hidden group transition-all hover:shadow-md">
-            <CardContent className="px-6 pt-6 pb-4">
+          <Card key={route.id} className="overflow-hidden group transition-all hover:shadow-md flex flex-col justify-between h-full">
+            <CardContent className="px-6 pt-6 pb-4 flex-1">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-xs">
@@ -48,24 +48,28 @@ export default async function RecentRoutes() {
                 </div>
               </div>
               <div className="space-y-3">
-                <div>
-                  <div className="flex items-start mb-1">
-                    <MapPin className="h-4 w-4 mr-2 text-muted-foreground shrink-0 mt-0.5" />
-                    <div>
-                      <div className="text-sm font-medium">From</div>
-                      <div className="text-sm">{fromPlace?.name}</div>
+                {fromPlace && (
+                  <div>
+                    <div className="flex items-start mb-1">
+                      <MapPin className="h-4 w-4 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+                      <div>
+                        <div className="text-sm font-medium">From</div>
+                        <div className="text-sm">{fromPlace.name}</div>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div>
-                  <div className="flex items-start">
-                    <MapPin className="h-4 w-4 mr-2 text-primary shrink-0 mt-0.5" />
-                    <div>
-                      <div className="text-sm font-medium">To</div>
-                      <div className="text-sm">{toPlace?.name}</div>
+                )}
+                {toPlace && (
+                  <div>
+                    <div className="flex items-start">
+                      <MapPin className="h-4 w-4 mr-2 text-primary shrink-0 mt-0.5" />
+                      <div>
+                        <div className="text-sm font-medium">To</div>
+                        <div className="text-sm">{toPlace.name}</div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </CardContent>
             <CardFooter className="px-6 py-4 bg-muted/40 flex justify-end">

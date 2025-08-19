@@ -45,9 +45,11 @@ function parseYMDToLocalDate(dateString: string): Date | null {
   return new Date(year, monthIndex, day);
 }
 
+const placeNullable = z.preprocess((val) => (val === "" ? null : val), z.string().uuid().nullable());
+
 const formSchema = z.object({
-  fromPlaceId: z.string().uuid(),
-  toPlaceId: z.string().uuid(),
+  fromPlaceId: placeNullable,
+  toPlaceId: placeNullable,
   startMileage: z.coerce.number().nonnegative(),
   endMileage: z.coerce.number().nonnegative(),
   date: z
@@ -74,7 +76,17 @@ const formSchema = z.object({
     message: "End mileage must be greater than or equal to start mileage",
     path: ["endMileage"],
   }
-);
+).superRefine((data, ctx) => {
+  // Require both places for work trips (isWork === true)
+  if (data.isWork) {
+    if (data.fromPlaceId == null) {
+      ctx.addIssue({ path: ["fromPlaceId"], code: z.ZodIssueCode.custom, message: "Start location is required for work trips" });
+    }
+    if (data.toPlaceId == null) {
+      ctx.addIssue({ path: ["toPlaceId"], code: z.ZodIssueCode.custom, message: "Destination is required for work trips" });
+    }
+  }
+});
 
 type EditRouteFormData = z.input<typeof formSchema>;
 
@@ -97,8 +109,8 @@ export default function EditRouteClientPage({ route, places }: Props) {
   const form = useForm<EditRouteFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fromPlaceId: route.fromPlaceId,
-      toPlaceId: route.toPlaceId,
+      fromPlaceId: route.fromPlaceId ?? "",
+      toPlaceId: route.toPlaceId ?? "",
       startMileage: route.startMileage,
       endMileage: route.endMileage,
       date: route.date
@@ -116,6 +128,20 @@ export default function EditRouteClientPage({ route, places }: Props) {
       isWork: route.isWork ?? false,
     },
   });
+
+  const isWork = form.watch("isWork");
+
+  useEffect(() => {
+      // When isWork toggles to false (private), clear place fields once and close popovers.
+      if (!isWork) {
+        const currentFrom = form.getValues("fromPlaceId");
+        const currentTo = form.getValues("toPlaceId");
+        if (currentFrom !== "") form.setValue("fromPlaceId", "", { shouldDirty: true, shouldValidate: true });
+        if (currentTo !== "") form.setValue("toPlaceId", "", { shouldDirty: true, shouldValidate: true });
+        setOpenStart(false);
+        setOpenDest(false);
+      }
+  }, [isWork, form, setOpenStart, setOpenDest]);
 
   const onSubmit = async (values: EditRouteFormData) => {
     await updateRoute(values);
@@ -145,12 +171,13 @@ export default function EditRouteClientPage({ route, places }: Props) {
                     <FormLabel>Start Location</FormLabel>
                     <FormControl>
                       <PlaceSelect
-                        value={field.value}
-                        onChange={field.onChange}
+                        value={typeof field.value === "string" ? field.value : ""}
+                        onChange={(v) => field.onChange(v)}
                         open={openStart}
                         onOpenChange={setOpenStart}
                         placeholder="Select start location"
                         places={places}
+                        optional={!isWork}
                       />
                     </FormControl>
                     <FormMessage />
@@ -167,12 +194,13 @@ export default function EditRouteClientPage({ route, places }: Props) {
                     <FormLabel>Destination</FormLabel>
                     <FormControl>
                       <PlaceSelect
-                        value={field.value}
-                        onChange={field.onChange}
+                        value={typeof field.value === "string" ? field.value : ""}
+                        onChange={(v) => field.onChange(v)}
                         open={openDest}
                         onOpenChange={setOpenDest}
                         placeholder="Select destination"
                         places={places}
+                        optional={!isWork}
                       />
                     </FormControl>
                     <FormMessage />
