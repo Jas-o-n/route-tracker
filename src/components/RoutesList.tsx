@@ -50,19 +50,21 @@ export default function RoutesList({ routes, places, searchQuery, sortBy }: Rout
     .sort((a, b) => {
       switch (sortBy) {
         case "date-desc":
-          return new Date(b.date).getTime() - new Date(a.date).getTime();
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         case "date-asc":
-          return new Date(a.date).getTime() - new Date(b.date).getTime();
-        case "kilometer-desc":
-          return (
-            b.endMileage - b.startMileage - (a.endMileage - a.startMileage)
-          );
-        case "kilometer-asc":
-          return (
-            a.endMileage - a.startMileage - (b.endMileage - b.startMileage)
-          );
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case "kilometer-desc": {
+          const diff = b.endMileage - a.endMileage;
+          if (diff !== 0) return diff;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
+        case "kilometer-asc": {
+          const diff = a.endMileage - b.endMileage;
+          if (diff !== 0) return diff;
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        }
         default:
-          return new Date(b.date).getTime() - new Date(a.date).getTime();
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       }
     });
 
