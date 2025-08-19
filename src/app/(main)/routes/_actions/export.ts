@@ -68,8 +68,8 @@ export async function getRoutesForExport(formData: FormData) {
 
   const exportableRoutes: ExportableRoute[] = result.map((route) => ({
     date: formatDate(route.date),
-    fromPlace: route.fromPlace.full_address,
-    toPlace: route.toPlace.full_address,
+    fromPlace: route.fromPlace?.full_address ?? "",
+    toPlace: route.toPlace?.full_address ?? "",
     startMileage: route.startMileage,
     endMileage: route.endMileage,
     distance: route.distance,
