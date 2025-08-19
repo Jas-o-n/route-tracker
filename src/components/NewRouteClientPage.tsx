@@ -68,7 +68,7 @@ export default function NewRouteClientPage({ places }: NewRouteClientPageProps) 
     queryFn: async () => {
       const res = await fetch('/api/routes/recent');
       if (!res.ok) throw new Error('Failed to fetch recent route');
-      return (await res.json()) as { route: { endMileage: number } | null };
+      return (await res.json()) as { route: { endMileage?: number; toPlaceId?: string } | null };
     },
   });
 
@@ -76,6 +76,13 @@ export default function NewRouteClientPage({ places }: NewRouteClientPageProps) 
     const currentValue = form.getValues('startMileage');
     if ((currentValue == null) && recent?.route?.endMileage != null) {
       form.setValue('startMileage', recent.route.endMileage, { shouldDirty: false });
+    }
+  }, [recent, form]);
+
+  useEffect(() => {
+    const currentFrom = form.getValues('fromPlaceId');
+    if ((currentFrom == null || currentFrom === '') && recent?.route?.toPlaceId) {
+      form.setValue('fromPlaceId', recent.route.toPlaceId, { shouldDirty: false });
     }
   }, [recent, form]);
   
