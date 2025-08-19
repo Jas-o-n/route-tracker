@@ -39,11 +39,14 @@ export default function RoutesList({ routes, places, searchQuery, sortBy }: Rout
     .filter((route) => {
       if (!searchQuery) return true;
       const search = searchQuery.toLowerCase();
-      const fromPlace = placesMap.get(route.fromPlaceId);
-      const toPlace = placesMap.get(route.toPlaceId);
+      const fromPlace = route.fromPlaceId ? placesMap.get(route.fromPlaceId) : undefined;
+      const toPlace = route.toPlaceId ? placesMap.get(route.toPlaceId) : undefined;
+  const fromName = fromPlace?.name ?? "";
+  const toName = toPlace?.name ?? "";
+
       return (
-        fromPlace?.name.toLowerCase().includes(search) ||
-        toPlace?.name.toLowerCase().includes(search) ||
+        (fromName && fromName.toLowerCase().includes(search)) ||
+        (toName && toName.toLowerCase().includes(search)) ||
         (route.notes && route.notes.toLowerCase().includes(search))
       );
     })
@@ -92,8 +95,8 @@ export default function RoutesList({ routes, places, searchQuery, sortBy }: Rout
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {filteredRoutes.map((route) => {
-        const fromPlace = places.find((p) => p.id === route.fromPlaceId);
-        const toPlace = places.find((p) => p.id === route.toPlaceId);
+    const fromPlace = route.fromPlaceId ? places.find((p) => p.id === route.fromPlaceId) : undefined;
+    const toPlace = route.toPlaceId ? places.find((p) => p.id === route.toPlaceId) : undefined;
         const mileage = route.endMileage - route.startMileage;
 
         return (
@@ -120,9 +123,11 @@ export default function RoutesList({ routes, places, searchQuery, sortBy }: Rout
               </div>
 
               <div className="flex items-center text-base font-medium mb-4 min-w-0">
-                <span className="truncate max-w-[45%] text-primary font-semibold">{fromPlace?.name}</span>
-                <span className="mx-2 text-muted-foreground shrink-0">→</span>
-                <span className="truncate max-w-[45%] text-primary font-semibold">{toPlace?.name}</span>
+                <span className="truncate max-w-[45%] text-primary font-semibold">{fromPlace?.name ?? ""}</span>
+                {(fromPlace?.name || toPlace?.name) && (
+                  <span className="mx-2 text-muted-foreground shrink-0">→</span>
+                )}
+                <span className="truncate max-w-[45%] text-primary font-semibold">{toPlace?.name ?? ""}</span>
               </div>
             </CardContent>
 

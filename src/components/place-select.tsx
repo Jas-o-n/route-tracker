@@ -57,7 +57,7 @@ export function PlaceSelect({
               </span>
             )}
             {!selectedPlace && optional && (
-              <span className="text-sm text-muted-foreground">Not saved for private trip</span>
+              <span className="text-sm text-muted-foreground">Not saved for private routes</span>
             )}
           </div>
         </Button>
