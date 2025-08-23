@@ -59,7 +59,7 @@ export default function PlacesClientPage({ places }: PlacesClientPageProps) {
 
   return (
     <main className="container mx-auto max-w-5xl py-8 px-4 md:px-6">
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-3xl font-bold tracking-tight mb-4">Saved Places</h1>
         <AddPlaceForm onAddPlace={handleAddPlace} isAdding={isAdding} />
       </div>
