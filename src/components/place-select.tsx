@@ -1,4 +1,5 @@
 import { Check, MapPin } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -14,15 +15,16 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import type { Place } from "@/lib/schemas/places";
+import { searchPlacesByName } from "@/lib/search";
 
 interface PlaceSelectProps {
-  value: string; // This will be the UUID
+  value: string;
   onChange: (value: string) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   placeholder?: string;
-  places: Place[]; // Now required
-  optional?: boolean; // when true, indicates the place is optional/disabled (e.g., private trip)
+  places: Place[];
+  optional?: boolean;
 }
 
 export function PlaceSelect({
@@ -35,6 +37,21 @@ export function PlaceSelect({
   optional = false,
 }: PlaceSelectProps) {
   const selectedPlace = places.find((place: Place) => place.id === value);
+  const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState(query);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query), 180);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  useEffect(() => {
+    if (!open) setQuery("");
+  }, [open]);
+
+  const filteredPlaces = useMemo(() => {
+    return searchPlacesByName(places, debouncedQuery, { limit: 200 });
+  }, [places, debouncedQuery]);
 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
@@ -71,19 +88,23 @@ export function PlaceSelect({
       >
         <Command>
           <CommandInput
+            value={query}
+            onValueChange={(v: string) => setQuery(v)}
             placeholder="Search places..."
             className="sticky top-0 z-10 bg-popover px-3 py-2 border-b border-muted/10"
           />
           <CommandEmpty>No place found.</CommandEmpty>
           <CommandGroup className="max-h-[250px] overflow-y-auto">
-            {places.map((place: Place) => (
+    {filteredPlaces.map((place: Place) => (
               <CommandItem
                 key={place.id}
                 value={`${place.name}::${place.id}`}
                 onSelect={(selected: string) => {
                   const id = selected.split("::").pop() ?? selected;
                   onChange(id);
-                  onOpenChange(false);
+      onOpenChange(false);
+      // reset the query when a selection is made so next open shows full list
+      setQuery("");
                 }}
                 className="flex items-center gap-3 px-3 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer"
               >
